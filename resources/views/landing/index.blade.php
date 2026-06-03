@@ -23,6 +23,70 @@
         box-shadow: 0 12px 30px rgba(0, 71, 76, .2);
     }
 
+    .nav-menu {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        color: var(--putih);
+        font-weight: 600;
+    }
+
+    .nav-menu a {
+        position: relative;
+        padding: 6px 0;
+        opacity: .92;
+        transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .nav-menu a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        border-radius: 999px;
+        background: var(--putih);
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform .2s ease;
+    }
+
+    .nav-menu a:hover {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+
+    .nav-menu a:hover::after {
+        transform: scaleX(1);
+    }
+
+    .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        margin-left: auto;
+    }
+
+    .nav .btn,
+    .hero .btn,
+    .slider-btn,
+    .news-control {
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+    }
+
+    .nav .btn:hover,
+    .hero .btn:hover,
+    .news-control:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 26px rgba(0, 71, 76, .22);
+    }
+
+    .slider-btn:hover {
+        transform: translateY(-50%) scale(1.06);
+        box-shadow: 0 12px 26px rgba(0, 71, 76, .22);
+    }
+
     .hero {
         padding: 110px 7vw 50px;
         background: url('{{ asset('images/bg-utama.png') }}') center/cover no-repeat;
@@ -252,6 +316,22 @@
     }
 
     @media (max-width: 850px) {
+        .nav {
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .nav-menu {
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .nav-actions {
+            width: 100%;
+            justify-content: flex-end;
+            gap: 14px;
+        }
+
         .hero-grid {
             grid-template-columns: 1fr;
         }
@@ -269,12 +349,20 @@
 <nav class="nav" data-main-nav>
     <div style="color:var(--putih)">Yayasan Nurul Huda Munjuk</div>
 
-    <div class="login-menu">
-        <button class="btn utama">Login</button>
+    <div class="nav-actions">
+        <div class="nav-menu">
+            <a href="#pendaftaran">Pendaftaran</a>
+            <a href="#berita">Berita</a>
+            <a href="#kontak">Kontak</a>
+        </div>
 
-        <div class="drop">
-            <a href="{{ route('guru.login') }}">Login Guru</a>
-            <a href="{{ route('siswa.login') }}">Login Siswa</a>
+        <div class="login-menu">
+            <button class="btn utama">Login</button>
+
+            <div class="drop">
+                <a href="{{ route('guru.login') }}">Login Guru</a>
+                <a href="{{ route('siswa.login') }}">Login Siswa</a>
+            </div>
         </div>
     </div>
 </nav>
@@ -350,7 +438,7 @@
     </div>
 </section>
 
-<section class="section" style="background:var(--muda)">
+<section class="section" id="pendaftaran" style="background:var(--muda)">
     <h2>Informasi Sekolah</h2>
 
     <div class="cards">
@@ -366,7 +454,7 @@
     </div>
 </section>
 
-<section class="section">
+<section class="section" id="kontak">
     <h2>Kontak</h2>
 
     <div class="clean-item">
