@@ -290,6 +290,59 @@
         cursor: not-allowed;
     }
 
+    .bantuan {
+        padding: 54px 7vw;
+        text-align: center;
+    }
+
+    .bantuan-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 28px;
+        max-width: 1080px;
+        margin: 0 auto;
+    }
+
+    .bantuan-item {
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .bantuan-item img {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+    }
+
+    .bantuan-item h4 {
+        margin: 8px 0 0;
+        color: var(--gelap);
+    }
+
+    .bantuan-item p {
+        margin: 0;
+        max-width: 320px;
+    }
+
+    .landing-footer {
+        padding: 40px 7vw 30px;
+        text-align: center;
+    }
+
+    .landing-footer p {
+        margin: 0;
+        color: #0D145A;
+        font-size: 18px;
+        line-height: 32px;
+    }
+
+    .landing-footer a {
+        color: #0D145A;
+        font-weight: 800;
+    }
+
     .login-menu {
         position: relative;
     }
@@ -454,14 +507,51 @@
     </div>
 </section>
 
-<section class="section" id="kontak">
-    <h2>Kontak</h2>
+<section class="bantuan" id="kontak">
+    <div class="bantuan-grid">
+        <div class="bantuan-item">
+            <img src="https://cdn01.rumahweb.com/under-construction/img/livechat.svg" alt="Kontak Pengurus">
+            <h4>Kontak Pengurus</h4>
+            <p>Cara paling cepat dan efektif untuk mendapatkan informasi.</p>
+        </div>
 
-    <div class="clean-item">
-        <p>Munjuk, Labuhan Maringgai</p>
-        <p>Email: admin@ppnurulhuda.or.id</p>
+        <div class="bantuan-item">
+            <img src="https://cdn01.rumahweb.com/under-construction/img/email.svg" alt="Informasi dan Kontak">
+            <h4>Informasi &amp; Kontak</h4>
+            <p>Hubungi kami.</p>
+            <p>
+                <b>Informasi Umum:</b><br>
+                <a href="mailto:admin@ppnurulhuda.or.id" title="Kirim email ke admin@ppnurulhuda.or.id">
+                    admin@ppnurulhuda.or.id
+                </a>
+            </p>
+            <p>
+                <b>Whatsapp:</b><br>
+                <a href="https://wa.me/6285378743857" title="Hubungi Whatsapp 0853 7874 3857">
+                    0853 7874 3857
+                </a>
+            </p>
+        </div>
+
+        <div class="bantuan-item">
+            <img src="https://cdn01.rumahweb.com/under-construction/img/telepon.svg" alt="Telepon">
+            <h4>Telepon</h4>
+            <p>Anda juga dapat menghubungi kami melalui telepon.</p>
+            <p>
+                <b>Telepon:</b><br>
+                <a href="tel:+6285378743857" title="Ketuk untuk menelepon 0853 7874 3857">
+                    0853 7874 3857
+                </a>
+            </p>
+        </div>
     </div>
 </section>
+
+<footer class="landing-footer">
+    <p>
+        Pondok Pesantren <a href="{{ route('beranda') }}">Nurul Huda Munjuk</a>
+    </p>
+</footer>
 
 <script>
     const mainNav = document.querySelector('[data-main-nav]');
