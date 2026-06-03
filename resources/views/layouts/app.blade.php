@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('judul', 'Yayasan Nurul Huda Munjuk')</title>
     <style>
-        :root{--toska:#0fbea8;--hijau:#047869;--gelap:#123c38;--muda:#e8fffb;--garis:#d8f3ef}
+        :root{--toska:#0fbea8;--hijau:#047869;--gelap:#123c38;--muda:#e8fffb;--garis:#d8f3ef;--putih:#ffffff}
         *{box-sizing:border-box} body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;color:#183d39;background:#f5fbfa}
         a{color:inherit;text-decoration:none}.btn{border:0;border-radius:8px;background:var(--toska);color:white;padding:10px 14px;font-weight:700;cursor:pointer}.btn.alt{background:#fff;color:var(--hijau);border:1px solid var(--garis)}.btn.danger{background:#dc3545}
         input,select,textarea{width:100%;border:1px solid var(--garis);border-radius:8px;padding:10px;background:white} textarea{min-height:90px}
