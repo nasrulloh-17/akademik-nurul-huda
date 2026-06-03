@@ -14,4 +14,20 @@ class LandingController extends Controller
             'informasi' => DB::table('informasi_sekolah')->latest()->get(),
         ]);
     }
+
+    public function berita(int $id)
+    {
+        $berita = DB::table('berita')->where('id', $id)->first();
+
+        abort_if(! $berita, 404);
+
+        return view('landing.berita-detail', [
+            'berita' => $berita,
+            'beritaLainnya' => DB::table('berita')
+                ->where('id', '!=', $id)
+                ->latest('tanggal_berita')
+                ->limit(3)
+                ->get(),
+        ]);
+    }
 }

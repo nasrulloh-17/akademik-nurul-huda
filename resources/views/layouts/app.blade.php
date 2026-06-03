@@ -10,7 +10,7 @@
             --toska: #0fbea8;
             --hijau: #047869;
             --gelap: #123c38;
-            --muda: #e8fffb;
+            --muda: #a7f8ea;
             --garis: #d8f3ef;
             --putih: #ffffff;
         }
@@ -49,6 +49,16 @@
 
         .btn.danger {
             background: #dc3545;
+        }
+
+        .btn.utama {
+            border: 0;
+            border-radius: 20px;
+            background: var(--putih);
+            color: var(--hijau);
+            padding: 10px 14px;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         input,

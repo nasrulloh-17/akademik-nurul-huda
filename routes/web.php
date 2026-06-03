@@ -8,6 +8,7 @@ use App\Http\Controllers\Siswa\SiswaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('beranda');
+Route::get('/berita/{id}', [LandingController::class, 'berita'])->name('berita.detail');
 
 Route::get('/admin', [AuthController::class, 'formAdmin'])->name('admin.login');
 Route::post('/admin', [AuthController::class, 'loginAdmin'])->name('admin.login.proses');

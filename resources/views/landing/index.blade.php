@@ -12,9 +12,15 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: rgb(0, 100, 85);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--garis);
+        background: transparent;
+        border-bottom: 1px solid transparent;
+        transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
+    }
+
+    .nav.scrolled {
+        background: linear-gradient(135deg, #007979, #0fbea8);
+        border-bottom-color: rgba(255, 255, 255, .18);
+        box-shadow: 0 12px 30px rgba(0, 71, 76, .2);
     }
 
     .hero {
@@ -138,6 +144,7 @@
 
     .section {
         padding: 54px 7vw;
+        text-align: center;
     }
 
     .cards {
@@ -146,12 +153,77 @@
         gap: 18px;
     }
 
+    .news-carousel {
+        position: relative;
+        max-width: 980px;
+        margin: 0 auto;
+    }
+
+    .news-window {
+        overflow: hidden;
+    }
+
+    .news-track {
+        display: flex;
+        gap: 18px;
+        transition: transform .45s ease;
+    }
+
+    .clean-item {
+        padding: 8px 12px;
+    }
+
+    .news-item {
+        flex: 0 0 calc((100% - 18px) / 2);
+    }
+
+    .news-link {
+        display: block;
+        color: inherit;
+        transition: color .2s ease, transform .2s ease;
+    }
+
+    .news-link:hover {
+        color: var(--hijau);
+        transform: translateY(-3px);
+    }
+
+    .clean-item p {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 620px;
+    }
+
     .news-img {
         width: 100%;
         height: 180px;
         object-fit: cover;
         border-radius: 8px;
         background: var(--muda);
+    }
+
+    .news-controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .news-control {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #007979, #0fbea8);
+        color: white;
+        font-size: 22px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .news-control:disabled {
+        opacity: .45;
+        cursor: not-allowed;
     }
 
     .login-menu {
@@ -184,21 +256,21 @@
             grid-template-columns: 1fr;
         }
 
-        .nav {
-            position: static;
+        .hero {
+            padding-top: 96px;
         }
 
-        .hero {
-            padding-top: 32px;
+        .news-item {
+            flex-basis: 100%;
         }
     }
 </style>
 
-<nav class="nav">
-    <strong style="color:var(--putih)">Yayasan Nurul Huda Munjuk</strong>
+<nav class="nav" data-main-nav>
+    <div style="color:var(--putih)">Yayasan Nurul Huda Munjuk</div>
 
     <div class="login-menu">
-        <button class="btn">Login</button>
+        <button class="btn utama">Login</button>
 
         <div class="drop">
             <a href="{{ route('guru.login') }}">Login Guru</a>
@@ -210,9 +282,12 @@
 <section class="hero">
     <div class="hero-grid">
         <div>
-            <h1>Yayasan Nurul Huda Munjuk</h1>
-            <p class="hero-copy">Sistem informasi akademik terpadu.</p>
-            <a class="btn" href="#berita">Lihat Berita Sekolah</a>
+        <p class="hero-copy">Selamat Datang di</p>    
+        <h1>Yayasan Nurul Huda Munjuk</h1>
+            <p class="hero-copy">Portal utama pondok terpadu 
+                <br>untuk mempermudah akses informasi dan akademik
+                <br>Menuju digitalisasi pondok pesatren.</p>
+            <a class="btn utama" href="#berita">Lihat Berita Sekolah</a>
         </div>
 
         <div class="slider" data-slider>
@@ -244,20 +319,34 @@
 <section class="section" id="berita">
     <h2>Berita Seputar Sekolah</h2>
 
-    <div class="cards">
-        @forelse($berita as $item)
-            <article class="card">
-                @if($item->foto_kegiatan)
-                    <img class="news-img" src="{{ asset($item->foto_kegiatan) }}" alt="{{ $item->judul }}">
-                @endif
+    <div class="news-carousel" data-news-carousel>
+        <div class="news-window">
+            <div class="news-track" data-news-track>
+                @forelse($berita as $item)
+                    <article class="clean-item news-item">
+                        <a class="news-link" href="{{ route('berita.detail', $item->id) }}">
+                            @if($item->foto_kegiatan)
+                                <img class="news-img" src="{{ asset($item->foto_kegiatan) }}" alt="{{ $item->judul }}">
+                            @endif
 
-                <h3>{{ $item->judul }}</h3>
-                <p class="muted">{{ $item->tanggal_berita }}</p>
-                <p>{{ \Illuminate\Support\Str::limit($item->isi, 150) }}</p>
-            </article>
-        @empty
-            <div class="card">Belum ada berita.</div>
-        @endforelse
+                            <h3>{{ $item->judul }}</h3>
+                            <p class="muted">{{ $item->tanggal_berita }}</p>
+                            <p>{{ \Illuminate\Support\Str::limit($item->isi, 150) }}</p>
+                            <strong>Baca selengkapnya</strong>
+                        </a>
+                    </article>
+                @empty
+                    <div class="clean-item news-item">Belum ada berita.</div>
+                @endforelse
+            </div>
+        </div>
+
+        @if($berita->count() > 2)
+            <div class="news-controls">
+                <button class="news-control" type="button" data-news-prev aria-label="Berita sebelumnya">&lsaquo;</button>
+                <button class="news-control" type="button" data-news-next aria-label="Berita berikutnya">&rsaquo;</button>
+            </div>
+        @endif
     </div>
 </section>
 
@@ -266,13 +355,13 @@
 
     <div class="cards">
         @forelse($informasi as $item)
-            <div class="card">
+            <div class="clean-item">
                 <h3>{{ $item->judul }}</h3>
                 <p>{{ $item->isi }}</p>
                 <strong>{{ $item->kontak }}</strong>
             </div>
         @empty
-            <div class="card">Informasi akan tampil setelah diisi admin.</div>
+            <div class="clean-item">Informasi akan tampil setelah diisi admin.</div>
         @endforelse
     </div>
 </section>
@@ -280,13 +369,24 @@
 <section class="section">
     <h2>Kontak</h2>
 
-    <div class="card">
+    <div class="clean-item">
         <p>Munjuk, Labuhan Maringgai</p>
         <p>Email: admin@ppnurulhuda.or.id</p>
     </div>
 </section>
 
 <script>
+    const mainNav = document.querySelector('[data-main-nav]');
+
+    if (mainNav) {
+        const updateNavbar = () => {
+            mainNav.classList.toggle('scrolled', window.scrollY > 40);
+        };
+
+        updateNavbar();
+        window.addEventListener('scroll', updateNavbar, { passive: true });
+    }
+
     document.querySelectorAll('[data-slider]').forEach((slider) => {
         const track = slider.querySelector('[data-slider-track]');
         const slides = Array.from(track.children);
@@ -336,6 +436,44 @@
 
         showSlide(0);
         startAutoSlide();
+    });
+
+    document.querySelectorAll('[data-news-carousel]').forEach((carousel) => {
+        const track = carousel.querySelector('[data-news-track]');
+        const items = Array.from(track.children);
+        const prev = carousel.querySelector('[data-news-prev]');
+        const next = carousel.querySelector('[data-news-next]');
+        let index = 0;
+
+        if (! prev || ! next || items.length <= 2) {
+            return;
+        }
+
+        const visibleItems = () => window.matchMedia('(max-width: 850px)').matches ? 1 : 2;
+
+        const updateNews = () => {
+            const itemWidth = items[0].getBoundingClientRect().width;
+            const gap = parseFloat(getComputedStyle(track).gap) || 0;
+            const maxIndex = Math.max(0, items.length - visibleItems());
+
+            index = Math.min(index, maxIndex);
+            track.style.transform = `translateX(-${index * (itemWidth + gap)}px)`;
+            prev.disabled = index === 0;
+            next.disabled = index === maxIndex;
+        };
+
+        prev.addEventListener('click', () => {
+            index -= 1;
+            updateNews();
+        });
+
+        next.addEventListener('click', () => {
+            index += 1;
+            updateNews();
+        });
+
+        window.addEventListener('resize', updateNews);
+        updateNews();
     });
 </script>
 @endsection
