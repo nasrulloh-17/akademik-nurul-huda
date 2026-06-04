@@ -345,22 +345,42 @@
 
     .login-menu {
         position: relative;
+        padding-bottom: 12px;
+        margin-bottom: -12px;
     }
 
-    .login-menu:hover .drop {
-        display: block;
+    .login-menu:hover .drop,
+    .login-menu:focus-within .drop {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
     }
 
     .drop {
-        display: none;
         position: absolute;
         right: 0;
-        top: 42px;
+        top: calc(100% + 6px);
+        z-index: 10;
         background: white;
         border: 1px solid var(--garis);
         border-radius: 8px;
         box-shadow: 0 18px 45px rgba(0, 0, 0, .12);
         min-width: 170px;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(8px);
+        transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+    }
+
+    .drop::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -14px;
+        height: 14px;
     }
 
     .drop a {
@@ -413,8 +433,8 @@
             <button class="btn utama">Login</button>
 
             <div class="drop">
-                <a href="{{ route('guru.login') }}">Login Guru</a>
-                <a href="{{ route('siswa.login') }}">Login Siswa</a>
+                <a href="{{ route('guru.login') }}">Sebagai Guru</a>
+                <a href="{{ route('siswa.login') }}">Sebagai Siswa</a>
             </div>
         </div>
     </div>
@@ -428,7 +448,7 @@
             <p class="hero-copy">Portal utama pondok terpadu 
                 <br>untuk mempermudah akses informasi dan akademik
                 <br>Menuju digitalisasi pondok pesatren.</p>
-            <a class="btn utama" href="#berita">Lihat Berita Sekolah</a>
+            <a class="btn utama" href="#berita">Lihat Berita Seputar Kami</a>
         </div>
 
         <div class="slider" data-slider>
@@ -458,7 +478,7 @@
 </section>
 
 <section class="section" id="berita">
-    <h2>Berita Seputar Sekolah</h2>
+    <h2>Berita Seputar Yayasan</h2>
 
     <div class="news-carousel" data-news-carousel>
         <div class="news-window">
@@ -492,7 +512,7 @@
 </section>
 
 <section class="section" id="pendaftaran" style="background:var(--muda)">
-    <h2>Informasi Sekolah</h2>
+    <h2>Informasi Yayasan</h2>
 
     <div class="cards">
         @forelse($informasi as $item)

@@ -1,6 +1,15 @@
 @extends('layouts.app')
 
 @section('body')
+@php
+    $jenisPengguna = session('jenis_pengguna');
+    $labelPeran = [
+        'admin' => 'Administrator',
+        'guru' => 'Guru',
+        'siswa' => 'Siswa',
+    ][$jenisPengguna] ?? 'Pengguna';
+@endphp
+
 <div class="shell" data-dashboard-shell>
     <aside class="side">
         <div class="side-head">
@@ -11,26 +20,28 @@
             </button>
         </div>
 
+        <div class="role-badge">{{ $labelPeran }}</div>
+
         <nav class="menu" data-dashboard-menu>
-            @if(session('jenis_pengguna') === 'admin')
-                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
-                <a href="{{ route('admin.slider') }}">Slider</a>
-                <a href="{{ route('admin.berita') }}">Berita</a>
-                <a href="{{ route('admin.informasi') }}">Informasi Sekolah</a>
-                <a href="{{ route('admin.guru') }}">Guru</a>
-                <a href="{{ route('admin.siswa') }}">Siswa</a>
-                <a href="{{ route('admin.kelas') }}">Kelas</a>
-                <a href="{{ route('admin.mata-pelajaran') }}">Mata Pelajaran</a>
-            @elseif(session('jenis_pengguna') === 'guru')
-                <a href="{{ route('guru.dashboard') }}">Dashboard</a>
-                <a href="{{ route('guru.nilai') }}">Input Nilai</a>
-                <a href="{{ route('guru.catatan') }}">Catatan Walikelas</a>
-                <a href="{{ route('guru.data-siswa') }}">Data Siswa</a>
+            @if($jenisPengguna === 'admin')
+                <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
+                <a class="{{ request()->routeIs('admin.slider') ? 'active' : '' }}" href="{{ route('admin.slider') }}">Slider</a>
+                <a class="{{ request()->routeIs('admin.berita') ? 'active' : '' }}" href="{{ route('admin.berita') }}">Berita</a>
+                <a class="{{ request()->routeIs('admin.informasi') ? 'active' : '' }}" href="{{ route('admin.informasi') }}">Informasi Sekolah</a>
+                <a class="{{ request()->routeIs('admin.guru') ? 'active' : '' }}" href="{{ route('admin.guru') }}">Guru</a>
+                <a class="{{ request()->routeIs('admin.siswa') ? 'active' : '' }}" href="{{ route('admin.siswa') }}">Siswa</a>
+                <a class="{{ request()->routeIs('admin.kelas') ? 'active' : '' }}" href="{{ route('admin.kelas') }}">Kelas</a>
+                <a class="{{ request()->routeIs('admin.mata-pelajaran') ? 'active' : '' }}" href="{{ route('admin.mata-pelajaran') }}">Mata Pelajaran</a>
+            @elseif($jenisPengguna === 'guru')
+                <a class="{{ request()->routeIs('guru.dashboard') ? 'active' : '' }}" href="{{ route('guru.dashboard') }}">Dashboard</a>
+                <a class="{{ request()->routeIs('guru.nilai') ? 'active' : '' }}" href="{{ route('guru.nilai') }}">Input Nilai</a>
+                <a class="{{ request()->routeIs('guru.catatan') ? 'active' : '' }}" href="{{ route('guru.catatan') }}">Catatan Walikelas</a>
+                <a class="{{ request()->routeIs('guru.data-siswa') ? 'active' : '' }}" href="{{ route('guru.data-siswa') }}">Data Siswa</a>
             @else
-                <a href="{{ route('siswa.dashboard') }}">Dashboard</a>
-                <a href="{{ route('siswa.biodata') }}">Biodata</a>
-                <a href="{{ route('siswa.raport') }}">Raport</a>
-                <a href="{{ route('siswa.tagihan') }}">Tagihan</a>
+                <a class="{{ request()->routeIs('siswa.dashboard') ? 'active' : '' }}" href="{{ route('siswa.dashboard') }}">Dashboard</a>
+                <a class="{{ request()->routeIs('siswa.biodata') ? 'active' : '' }}" href="{{ route('siswa.biodata') }}">Biodata</a>
+                <a class="{{ request()->routeIs('siswa.raport') ? 'active' : '' }}" href="{{ route('siswa.raport') }}">Raport</a>
+                <a class="{{ request()->routeIs('siswa.tagihan') ? 'active' : '' }}" href="{{ route('siswa.tagihan') }}">Tagihan</a>
             @endif
         </nav>
     </aside>

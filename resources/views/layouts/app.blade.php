@@ -13,6 +13,8 @@
             --muda: #a7f8ea;
             --garis: #d8f3ef;
             --putih: #ffffff;
+            --panel: rgba(255, 255, 255, .94);
+            --bayang: 0 18px 45px rgba(0, 71, 76, .12);
         }
 
         * {
@@ -21,9 +23,9 @@
 
         body {
             margin: 0;
-            font-family:'Poppins', Segoe UI, Arial, sans-serif;
+            font-family: 'Poppins', Segoe UI, Arial, sans-serif;
             color: #183d39;
-            background: #f5fbfa;
+            background: #eefdf9;
         }
 
         a {
@@ -34,11 +36,17 @@
         .btn {
             border: 0;
             border-radius: 8px;
-            background: var(--toska);
+            background: linear-gradient(135deg, var(--hijau), var(--toska));
             color: white;
             padding: 10px 14px;
             font-weight: 700;
             cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(0, 71, 76, .18);
         }
 
         .btn.alt {
@@ -48,7 +56,7 @@
         }
 
         .btn.danger {
-            background: #dc3545;
+            background: linear-gradient(135deg, #dc3545, #f05b68);
         }
 
         .btn.utama {
@@ -68,7 +76,16 @@
             border: 1px solid var(--garis);
             border-radius: 8px;
             padding: 10px;
-            background: white;
+            background: #fbfffe;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 0;
+            border-color: var(--toska);
+            box-shadow: 0 0 0 4px rgba(15, 190, 168, .14);
         }
 
         textarea {
@@ -81,6 +98,7 @@
             background: white;
             border-radius: 8px;
             overflow: hidden;
+            box-shadow: 0 10px 28px rgba(15, 190, 168, .08);
         }
 
         th,
@@ -92,23 +110,30 @@
         }
 
         th {
-            background: var(--muda);
+            background: #d9fff6;
             color: var(--gelap);
         }
 
         .shell {
             display: flex;
             min-height: 100vh;
+            background:
+                linear-gradient(135deg, rgba(0, 121, 121, .08), rgba(15, 190, 168, .06)),
+                #f6fffd;
         }
 
         .side {
             width: 270px;
-            background: linear-gradient(180deg, var(--hijau), #075c52);
+            background:
+                linear-gradient(180deg, rgba(4, 120, 105, .96), rgba(7, 92, 82, .98)),
+                url('{{ asset('images/bg-utama.png') }}') center/cover no-repeat;
             color: white;
             padding: 24px 18px;
             position: sticky;
             top: 0;
             height: 100vh;
+            box-shadow: 18px 0 50px rgba(0, 71, 76, .18);
+            transition: width .2s ease;
         }
 
         .side-head {
@@ -121,7 +146,22 @@
         .brand {
             font-size: 20px;
             font-weight: 900;
-            margin-bottom: 24px;
+            line-height: 1.25;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            width: fit-content;
+            margin: 14px 0 24px;
+            padding: 7px 11px;
+            border: 1px solid rgba(255, 255, 255, .28);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .13);
+            color: rgba(255, 255, 255, .92);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .4px;
         }
 
         .menu-toggle {
@@ -149,10 +189,15 @@
             border-radius: 8px;
             margin: 5px 0;
             color: #eafffb;
+            font-weight: 600;
+            transition: background .2s ease, color .2s ease, transform .2s ease;
         }
 
-        .menu a:hover {
-            background: rgba(255, 255, 255, .14);
+        .menu a:hover,
+        .menu a.active {
+            background: rgba(255, 255, 255, .18);
+            color: white;
+            transform: translateX(4px);
         }
 
         .menu-collapsed .side {
@@ -164,6 +209,7 @@
         }
 
         .menu-collapsed .brand,
+        .menu-collapsed .role-badge,
         .menu-collapsed .menu {
             display: none;
         }
@@ -171,22 +217,35 @@
         .content {
             flex: 1;
             padding: 28px;
+            min-width: 0;
         }
 
         .top {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 18px;
             margin-bottom: 22px;
+            padding: 18px;
+            border: 1px solid rgba(216, 243, 239, .9);
+            border-radius: 8px;
+            background: var(--panel);
+            box-shadow: var(--bayang);
+        }
+
+        .top h1 {
+            color: var(--gelap);
+            font-size: clamp(24px, 3vw, 34px);
+            line-height: 1.2;
         }
 
         .card {
-            background: white;
+            background: var(--panel);
             border: 1px solid var(--garis);
             border-radius: 8px;
             padding: 18px;
             margin-bottom: 18px;
-            box-shadow: 0 10px 28px rgba(15, 190, 168, .08);
+            box-shadow: var(--bayang);
         }
 
         .grid {
@@ -204,9 +263,11 @@
         .alert {
             padding: 12px;
             border-radius: 8px;
+            border: 1px solid #bff7ec;
             background: #d9fff6;
             color: #086456;
             margin-bottom: 16px;
+            box-shadow: 0 10px 28px rgba(15, 190, 168, .08);
         }
 
         .muted {
@@ -231,6 +292,7 @@
                 width: auto;
                 height: auto;
                 padding: 16px 18px;
+                box-shadow: 0 12px 32px rgba(0, 71, 76, .16);
             }
 
             .side-head {
@@ -240,6 +302,10 @@
             .brand {
                 margin-bottom: 0;
                 font-size: 18px;
+            }
+
+            .role-badge {
+                margin: 12px 0 0;
             }
 
             .menu {
@@ -258,8 +324,17 @@
                 display: block;
             }
 
+            .menu-collapsed .role-badge {
+                display: none;
+            }
+
             .content {
                 padding: 18px;
+            }
+
+            .top {
+                align-items: flex-start;
+                flex-direction: column;
             }
         }
     </style>
