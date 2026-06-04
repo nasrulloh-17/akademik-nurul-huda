@@ -13,7 +13,7 @@
 <div class="shell" data-dashboard-shell>
     <aside class="side">
         <div class="side-head">
-            <div class="brand">Yayasan Nurul Huda Munjuk</div>
+            <div class="brand">SIAKAD</div>
 
             <button class="menu-toggle" type="button" data-menu-toggle aria-expanded="true" aria-label="Tutup menu">
                 &times;
@@ -49,7 +49,7 @@
     <main class="content">
         <div class="top">
             <div>
-                <h1 style="margin:0">@yield('judul_halaman')</h1>
+                <h2 style="margin:0">@yield('judul_halaman')</h2>
                 <div class="muted">{{ session('nama_pengguna') }}</div>
             </div>
 

@@ -125,7 +125,7 @@
         .side {
             width: 270px;
             background:
-                linear-gradient(180deg, rgba(4, 120, 105, .96), rgba(7, 92, 82, .98)),
+                linear-gradient(135deg, rgba(0, 121, 121, .90), rgba(15, 190, 168, .0)),
                 url('{{ asset('images/bg-utama.png') }}') center/cover no-repeat;
             color: white;
             padding: 24px 18px;
@@ -144,7 +144,7 @@
         }
 
         .brand {
-            font-size: 20px;
+            font-size: 35px;
             font-weight: 900;
             line-height: 1.25;
         }
@@ -189,7 +189,7 @@
             border-radius: 8px;
             margin: 5px 0;
             color: #eafffb;
-            font-weight: 600;
+            font-weight: 300;
             transition: background .2s ease, color .2s ease, transform .2s ease;
         }
 
