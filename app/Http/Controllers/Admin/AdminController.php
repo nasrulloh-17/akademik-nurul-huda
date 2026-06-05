@@ -49,7 +49,14 @@ class AdminController extends Controller
     public function simpanSlider(Request $request)
     {
         $this->jaga();
-        $data = $request->validate(['judul' => 'required', 'deskripsi' => 'nullable', 'gambar' => 'nullable|image', 'aktif' => 'nullable']);
+        $data = $request->validate([
+            'gambar' => 'required|image',
+            'link' => 'nullable|string|max:255',
+            'aktif' => 'nullable',
+        ]);
+
+        $data['judul'] = 'Slider';
+        $data['deskripsi'] = null;
         $data['gambar'] = $this->unggah($request, 'gambar', 'slider');
         $data['aktif'] = $request->boolean('aktif');
         $data['created_at'] = now();

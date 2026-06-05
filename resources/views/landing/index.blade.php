@@ -95,7 +95,7 @@
 
     .hero-grid {
         display: grid;
-        grid-template-columns: 1.15fr .85fr;
+        grid-template-columns: .95fr 1.15fr;
         gap: 28px;
         align-items: center;
     }
@@ -108,17 +108,25 @@
     }
 
     .hero-copy {
-        font-size: 19px;
+        font-size: 17px;
+        color: #ffffff;
+        max-width: 620px;
+    }
+
+    .hero-2 {
+        font-size: 22px;
         color: #ffffff;
         max-width: 620px;
     }
 
     .slider {
-        height: 390px;
-        border-radius: 8px;
+        width: min(100%, 500px);
+        aspect-ratio: 1 / 1;
+        justify-self: end;
+        border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 26px 70px rgba(4, 120, 105, .18);
-        background: linear-gradient(135deg, var(--toska), var(--hijau));
+        box-shadow: 0 26px 70px rgba(4, 120, 105, 0);
+        background: rgba(255, 255, 255, 0);
         position: relative;
     }
 
@@ -131,25 +139,22 @@
     .slide {
         min-width: 100%;
         height: 100%;
+        display: block;
+    }
+
+    .slide-link,
+    .slide-frame {
         display: grid;
-        place-items: end start;
-        padding: 34px;
-        color: white;
-        background-size: cover;
-        background-position: center;
-        position: relative;
+        width: 100%;
+        height: 100%;
+        place-items: center;
     }
 
-    .slide:before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(0deg, rgba(0, 0, 0, .52), rgba(0, 0, 0, .05));
-    }
-
-    .slide div {
-        position: relative;
-        max-width: 85%;
+    .slide-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
     }
 
     .slider-btn {
@@ -409,8 +414,18 @@
             grid-template-columns: 1fr;
         }
 
+        .slider {
+            justify-self: center;
+            width: min(100%, 520px);
+        }
+
         .hero {
             padding-top: 96px;
+        }
+
+        .hero-copy {
+            font-size: 14px;
+
         }
 
         .news-item {
@@ -443,30 +458,33 @@
 <section class="hero">
     <div class="hero-grid">
         <div>
-        <p class="hero-copy">Selamat Datang di</p>    
+        <p class="hero-2">Selamat Datang di</p>    
         <h1>Yayasan Nurul Huda Munjuk</h1>
             <p class="hero-copy">Portal utama pondok terpadu 
-                <br>untuk mempermudah akses informasi dan akademik
-                <br>Menuju digitalisasi pondok pesatren.</p>
+                <br>untuk mempermudah akses informasi dan akademik.</p>
             <a class="btn utama" href="#berita">Lihat Berita Seputar Kami</a>
         </div>
 
         <div class="slider" data-slider>
             <div class="slider-track" data-slider-track>
                 @forelse($slider as $item)
-                    <div class="slide" style="{{ $item->gambar ? 'background-image:url('.asset($item->gambar).')' : '' }}">
-                        <div>
-                            <h2>{{ $item->judul }}</h2>
-                            <p>{{ $item->deskripsi }}</p>
-                        </div>
+                    <div class="slide">
+                        @if($item->link)
+                            <a class="slide-link" href="{{ $item->link }}">
+                                @if($item->gambar)
+                                    <img class="slide-image" src="{{ asset($item->gambar) }}" alt="Slider Yayasan Nurul Huda Munjuk">
+                                @endif
+                            </a>
+                        @else
+                            <div class="slide-frame">
+                                @if($item->gambar)
+                                    <img class="slide-image" src="{{ asset($item->gambar) }}" alt="Slider Yayasan Nurul Huda Munjuk">
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 @empty
-                    <div class="slide">
-                        <div>
-                            <h2>Selamat Datang</h2>
-                            <p>Slider dapat diperbarui oleh admin.</p>
-                        </div>
-                    </div>
+                    <div class="slide"></div>
                 @endforelse
             </div>
 

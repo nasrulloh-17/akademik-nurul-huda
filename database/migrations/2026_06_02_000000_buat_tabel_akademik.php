@@ -63,6 +63,7 @@ return new class extends Migration
             $table->string('judul');
             $table->text('deskripsi')->nullable();
             $table->string('gambar')->nullable();
+            $table->string('link')->nullable();
             $table->boolean('aktif')->default(true);
             $table->timestamps();
         });

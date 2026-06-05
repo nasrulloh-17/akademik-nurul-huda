@@ -62,8 +62,8 @@
         .btn.utama {
             border: 0;
             border-radius: 20px;
-            background: var(--putih);
-            color: var(--hijau);
+            background: linear-gradient(135deg, #ff7a00, #ed9c00);
+            color: var(--putih);
             padding: 10px 14px;
             font-weight: 700;
             cursor: pointer;
