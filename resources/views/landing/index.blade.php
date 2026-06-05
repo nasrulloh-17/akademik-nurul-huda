@@ -216,6 +216,10 @@
         text-align: center;
     }
 
+    .section-jenjang {
+        padding-top: 24px;
+    }
+
     .cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -293,6 +297,71 @@
     .news-control:disabled {
         opacity: .45;
         cursor: not-allowed;
+    }
+
+    .jenjang-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        max-width: 1080px;
+        margin: 28px auto 0;
+    }
+
+    .jenjang-card {
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+        padding: 16px 16px 24px;
+        border: 1px solid var(--garis);
+        border-radius: 10px;
+        background: #ffffff;
+        overflow: hidden;
+        box-shadow: 0 14px 34px rgba(0, 71, 76, .08);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .jenjang-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 42px rgba(0, 71, 76, .13);
+    }
+
+    .jenjang-logo {
+        display: grid;
+        width: 100%;
+        min-height: 150px;
+        place-items: center;
+        border: 1px dashed rgba(0, 121, 121, .36);
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(0, 121, 121, .1), rgba(15, 190, 168, .16));
+        color: var(--hijau);
+        font-weight: 900;
+        text-align: center;
+    }
+
+    .jenjang-logo-img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 10px;
+        display: block;
+    }
+
+    .jenjang-card h3 {
+        margin: 4px 0 0;
+        color: var(--hijau);
+        font-size: 16px;
+    }
+
+    .jenjang-card h4 {
+        margin: 0;
+        color: var(--gelap);
+        font-size: 20px;
+    }
+
+    .jenjang-card p {
+        max-width: 280px;
+        margin: 0;
+        color: #66827f;
     }
 
     .bantuan {
@@ -416,6 +485,12 @@
         padding: 12px 14px;
     }
 
+    @media (max-width: 980px) {
+        .jenjang-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
     @media (max-width: 850px) {
         .nav {
             flex-wrap: wrap;
@@ -453,6 +528,10 @@
 
         .news-item {
             flex-basis: 100%;
+        }
+
+        .jenjang-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -549,6 +628,59 @@
                 <button class="news-control" type="button" data-news-next aria-label="Berita berikutnya">&rsaquo;</button>
             </div>
         @endif
+    </div>
+</section>
+
+<section class="section section-jenjang" id="jenjang">
+    <h2>Jenjang Pendidikan</h2>
+
+    <div class="jenjang-grid">
+        <div class="jenjang-card">
+            <img class="jenjang-logo-img" src="{{ asset('images/medsos.svg') }}" alt="Logo PAUD Nurul Huda">
+            <h3>PAUD</h3>
+            <h4>PAUD Nurul Huda</h4>
+            <p>Pendidikan usia dini dengan suasana belajar yang aman, ceria, dan islami.</p>
+        </div>
+
+        <div class="jenjang-card">
+            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-tk.png') }}" alt="Logo TK Nurul Huda"> --}}
+            <div class="jenjang-logo">Gambar Jenjang</div>
+            <h3>TK</h3>
+            <h4>TK Nurul Huda</h4>
+            <p>Membentuk dasar karakter, kemandirian, dan kesiapan anak memasuki sekolah dasar.</p>
+        </div>
+
+        <div class="jenjang-card">
+            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-mi.png') }}" alt="Logo MI Nurul Huda"> --}}
+            <div class="jenjang-logo">Gambar Jenjang</div>
+            <h3>MI</h3>
+            <h4>MI Nurul Huda</h4>
+            <p>Pendidikan dasar yang memadukan ilmu umum, akhlak, dan pembiasaan ibadah.</p>
+        </div>
+
+        <div class="jenjang-card">
+            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-smp.png') }}" alt="Logo SMP Nurul Huda"> --}}
+            <div class="jenjang-logo">Gambar Jenjang</div>
+            <h3>SMP</h3>
+            <h4>SMP Nurul Huda</h4>
+            <p>Menguatkan kemampuan akademik, kedisiplinan, dan karakter santri remaja.</p>
+        </div>
+
+        <div class="jenjang-card">
+            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-ma.png') }}" alt="Logo MA Nurul Huda"> --}}
+            <div class="jenjang-logo">Gambar Jenjang</div>
+            <h3>MA</h3>
+            <h4>MA Nurul Huda</h4>
+            <p>Mempersiapkan peserta didik melanjutkan pendidikan tinggi dan berperan di masyarakat.</p>
+        </div>
+
+        <div class="jenjang-card">
+            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-ponpes.png') }}" alt="Logo Pondok Pesantren Nurul Huda"> --}}
+            <div class="jenjang-logo">Gambar Jenjang</div>
+            <h3>Ponpes</h3>
+            <h4>Pondok Pesantren Nurul Huda</h4>
+            <p>Pembinaan keagamaan, adab, dan kehidupan santri dalam lingkungan pesantren.</p>
+        </div>
     </div>
 </section>
 
