@@ -331,20 +331,43 @@
         max-width: 320px;
     }
 
+    .map-frame {
+        width: 100%;
+        max-width: 340px;
+        aspect-ratio: 4 / 1;
+        overflow: hidden;
+        border: 1px solid var(--garis);
+        border-radius: 10px;
+        box-shadow: 0 14px 34px rgba(0, 71, 76, .12);
+    }
+
+    .map-frame iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+    }
+
+    .map-link {
+        color: var(--hijau);
+        font-weight: 700;
+    }
+
     .landing-footer {
-        padding: 40px 7vw 30px;
+        padding: 15px 7vw 15px;
         text-align: center;
+        background: linear-gradient(135deg, #007979, #0fbea8);
     }
 
     .landing-footer p {
         margin: 0;
-        color: #0D145A;
-        font-size: 18px;
+        color: #ffffff;
+        font-size: 15px;
         line-height: 32px;
     }
 
     .landing-footer a {
-        color: #0D145A;
+        color: #ffffff;
         font-weight: 800;
     }
 
@@ -548,23 +571,17 @@
 <section class="bantuan" id="kontak">
     <div class="bantuan-grid">
         <div class="bantuan-item">
-            <img src="https://cdn01.rumahweb.com/under-construction/img/livechat.svg" alt="Kontak Pengurus">
+            <img src="{{ asset ('images/telepon.svg') }}" alt="Kontak Pengurus" >
             <h4>Kontak Pengurus</h4>
             <p>Cara paling cepat dan efektif untuk mendapatkan informasi.</p>
-        </div>
-
-        <div class="bantuan-item">
-            <img src="https://cdn01.rumahweb.com/under-construction/img/email.svg" alt="Informasi dan Kontak">
-            <h4>Informasi &amp; Kontak</h4>
-            <p>Hubungi kami.</p>
             <p>
-                <b>Informasi Umum:</b><br>
-                <a href="mailto:admin@ppnurulhuda.or.id" title="Kirim email ke admin@ppnurulhuda.or.id">
-                    admin@ppnurulhuda.or.id
+            <b>Telepon:</b><br>
+                <a href="tel:+6285378743857" title="Ketuk untuk menelepon 0853 7874 3857">
+                    0853 7874 3857
                 </a>
             </p>
             <p>
-                <b>Whatsapp:</b><br>
+            <b>Whatsapp:</b><br>
                 <a href="https://wa.me/6285378743857" title="Hubungi Whatsapp 0853 7874 3857">
                     0853 7874 3857
                 </a>
@@ -572,15 +589,38 @@
         </div>
 
         <div class="bantuan-item">
-            <img src="https://cdn01.rumahweb.com/under-construction/img/telepon.svg" alt="Telepon">
-            <h4>Telepon</h4>
-            <p>Anda juga dapat menghubungi kami melalui telepon.</p>
+            <img src="{{ asset ('images/medsos.svg') }}" alt="Informasi dan Kontak">
+            <h4>Sosial Media</h4>
+            <p>Ikuti kami di media sosial untuk informasi terbaru.</p>
             <p>
-                <b>Telepon:</b><br>
-                <a href="tel:+6285378743857" title="Ketuk untuk menelepon 0853 7874 3857">
-                    0853 7874 3857
+                <b>Instagram</b><br>
+                <a href="https://www.instagram.com/ppnurulhuda/" target="_blank" title="Kunjungi Instagram PP Nurul Huda">
+                    ppnurulhuda
                 </a>
             </p>
+            <p>
+                <b>Facebook:</b><br>
+                <a href="https://www.facebook.com/ppnurulhuda/" target="_blank" title="Kunjungi Facebook PP Nurul Huda">
+                    ppnurulhuda
+                </a>
+            </p>
+        </div>
+
+        <div class="bantuan-item">
+            <img src="{{ asset ('images/alamat.svg') }}" alt="Alamat">
+            <h4>Alamat</h4>
+            <p>Jl. Lintas Pantai Timur Sumatera, Dusun Munjuk, Desa Labuhan Maringgai, Kec. Labuhan Maringgai, Lampung Timur</p>
+            <div class="map-frame">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d557.3828191851405!2d105.79083697865478!3d-5.329083475650464!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e40594d9ab79577%3A0x457c5cf87479166a!2sPondok%20Pesantren%20Nurul%20Huda!5e0!3m2!1sid!2sid!4v1780667032683!5m2!1sid!2sid"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    title="Peta lokasi Pondok Pesantren Nurul Huda Munjuk"
+                ></iframe>
+            </div>
+            <a class="map-link" href="https://maps.app.goo.gl/kTYGw8LsVemhpzKZA" target="_blank" rel="noopener">
+                Buka Google Maps
+            </a>
         </div>
     </div>
 </section>
