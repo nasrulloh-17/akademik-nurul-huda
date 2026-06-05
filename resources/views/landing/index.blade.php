@@ -636,49 +636,38 @@
 
     <div class="jenjang-grid">
         <div class="jenjang-card">
-            <img class="jenjang-logo-img" src="{{ asset('images/medsos.svg') }}" alt="Logo PAUD Nurul Huda">
-            <h3>PAUD</h3>
-            <h4>PAUD Nurul Huda</h4>
+            <img class="jenjang-logo-img" src="{{ asset('images/jenjang/6.svg') }}" alt="Logo PONDOK Nurul Huda">
+            <h4>PP Nurul Huda Munjuk</h4>
             <p>Pendidikan usia dini dengan suasana belajar yang aman, ceria, dan islami.</p>
         </div>
 
         <div class="jenjang-card">
-            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-tk.png') }}" alt="Logo TK Nurul Huda"> --}}
-            <div class="jenjang-logo">Gambar Jenjang</div>
-            <h3>TK</h3>
-            <h4>TK Nurul Huda</h4>
+            <img class="jenjang-logo-img" src="{{ asset('images/jenjang/1.svg') }}" alt="Logo RA Nurul Huda">
+            <h4>RA At Taqwa</h4>
             <p>Membentuk dasar karakter, kemandirian, dan kesiapan anak memasuki sekolah dasar.</p>
         </div>
 
         <div class="jenjang-card">
-            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-mi.png') }}" alt="Logo MI Nurul Huda"> --}}
-            <div class="jenjang-logo">Gambar Jenjang</div>
-            <h3>MI</h3>
-            <h4>MI Nurul Huda</h4>
+            <img class="jenjang-logo-img" src="{{ asset('images/jenjang/4.svg') }}" alt="Logo SD Nurul Huda">
+            <h4>SD Islam Plus Ma'arif 2 NH</h4>
             <p>Pendidikan dasar yang memadukan ilmu umum, akhlak, dan pembiasaan ibadah.</p>
         </div>
 
         <div class="jenjang-card">
-            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-smp.png') }}" alt="Logo SMP Nurul Huda"> --}}
-            <div class="jenjang-logo">Gambar Jenjang</div>
-            <h3>SMP</h3>
-            <h4>SMP Nurul Huda</h4>
+            <img class="jenjang-logo-img" src="{{ asset('images/jenjang/2.svg') }}" alt="Logo SMP Nurul Huda">
+            <h4>MTS Ma'arif 20</h4>
             <p>Menguatkan kemampuan akademik, kedisiplinan, dan karakter santri remaja.</p>
         </div>
 
         <div class="jenjang-card">
-            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-ma.png') }}" alt="Logo MA Nurul Huda"> --}}
-            <div class="jenjang-logo">Gambar Jenjang</div>
-            <h3>MA</h3>
-            <h4>MA Nurul Huda</h4>
+            <img class="jenjang-logo-img" src="{{ asset('images/jenjang/3.svg') }}" alt="Logo MA Nurul Huda">
+            <h4>SMA Nurul Huda</h4>
             <p>Mempersiapkan peserta didik melanjutkan pendidikan tinggi dan berperan di masyarakat.</p>
         </div>
 
         <div class="jenjang-card">
-            {{-- Ganti placeholder ini dengan: <img class="jenjang-logo-img" src="{{ asset('images/logo-ponpes.png') }}" alt="Logo Pondok Pesantren Nurul Huda"> --}}
-            <div class="jenjang-logo">Gambar Jenjang</div>
-            <h3>Ponpes</h3>
-            <h4>Pondok Pesantren Nurul Huda</h4>
+            <img class="jenjang-logo-img" src="{{ asset('images/jenjang/5.svg') }}" alt="Logo Pondok Pesantren Nurul Huda">
+            <h4>MADIN Nurul Huda</h4>
             <p>Pembinaan keagamaan, adab, dan kehidupan santri dalam lingkungan pesantren.</p>
         </div>
     </div>
