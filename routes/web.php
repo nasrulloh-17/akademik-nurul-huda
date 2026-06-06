@@ -47,6 +47,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/siswa/{id}/hapus', [AdminController::class, 'hapusSiswa'])->name('siswa.hapus');
     Route::get('/kelas', [AdminController::class, 'kelas'])->name('kelas');
     Route::post('/kelas', [AdminController::class, 'simpanKelas'])->name('kelas.simpan');
+    Route::get('/naik-kelas', [AdminController::class, 'naikKelas'])->name('naik-kelas');
+    Route::post('/tahun-ajaran', [AdminController::class, 'simpanTahunAjaran'])->name('tahun-ajaran.simpan');
+    Route::post('/tahun-ajaran/{id}/aktif', [AdminController::class, 'aktifkanTahunAjaran'])->name('tahun-ajaran.aktif');
+    Route::post('/naik-kelas', [AdminController::class, 'prosesNaikKelas'])->name('naik-kelas.proses');
+    Route::post('/lulus-kelas', [AdminController::class, 'prosesLulusKelas'])->name('lulus-kelas.proses');
     Route::get('/mata-pelajaran', [AdminController::class, 'mataPelajaran'])->name('mata-pelajaran');
     Route::post('/mata-pelajaran', [AdminController::class, 'simpanMataPelajaran'])->name('mata-pelajaran.simpan');
     Route::post('/mata-pelajaran/{id}/ubah', [AdminController::class, 'ubahMataPelajaran'])->name('mata-pelajaran.ubah');

@@ -132,8 +132,19 @@
             position: sticky;
             top: 0;
             height: 100vh;
+            overflow-y: auto;
+            overscroll-behavior: contain;
             box-shadow: 18px 0 50px rgba(0, 71, 76, .18);
             transition: width .2s ease;
+        }
+
+        .side::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .side::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .32);
+            border-radius: 999px;
         }
 
         .side-head {

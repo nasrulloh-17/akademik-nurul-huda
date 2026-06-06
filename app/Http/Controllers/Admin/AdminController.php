@@ -15,6 +15,24 @@ class AdminController extends Controller
         abort_unless(session('jenis_pengguna') === 'admin', 403);
     }
 
+    private function tahunAjaranAktif()
+    {
+        $tahunAjaran = DB::table('tahun_ajaran')->where('aktif', true)->first();
+
+        if ($tahunAjaran) {
+            return $tahunAjaran;
+        }
+
+        $id = DB::table('tahun_ajaran')->insertGetId([
+            'nama_tahun_ajaran' => now()->month >= 7 ? now()->year.'/'.now()->addYear()->year : now()->subYear()->year.'/'.now()->year,
+            'aktif' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return DB::table('tahun_ajaran')->where('id', $id)->first();
+    }
+
     private function unggah(Request $request, string $nama, string $folder): ?string
     {
         if (! $request->hasFile($nama)) {
@@ -250,6 +268,7 @@ class AdminController extends Controller
     public function simpanSiswa(Request $request)
     {
         $this->jaga();
+        $tahunAjaran = $this->tahunAjaranAktif();
         $data = $request->validate([
             'nis' => 'required',
             'nama_siswa' => 'required',
@@ -260,7 +279,7 @@ class AdminController extends Controller
             'alamat' => 'nullable',
         ]);
 
-        DB::transaction(function () use ($data) {
+        DB::transaction(function () use ($data, $tahunAjaran) {
             $penggunaId = DB::table('pengguna')->insertGetId([
                 'nama' => $data['nama_siswa'],
                 'identitas' => $data['nis'],
@@ -280,6 +299,17 @@ class AdminController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            if (! empty($data['kelas_id'])) {
+                $siswaId = DB::table('siswa')->where('pengguna_id', $penggunaId)->value('id');
+                DB::table('riwayat_kelas')->insert([
+                    'siswa_id' => $siswaId,
+                    'kelas_id' => $data['kelas_id'],
+                    'tahun_ajaran_id' => $tahunAjaran->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         });
 
         return back()->with('sukses', 'Siswa dan akun login berhasil dibuat.');
@@ -307,8 +337,116 @@ class AdminController extends Controller
         $this->jaga();
         return view('admin.kelas', [
             'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
-            'siswa' => DB::table('siswa')->orderBy('nama_siswa')->get()->groupBy('kelas_id'),
+            'siswa' => DB::table('siswa')->where('status', 'aktif')->orderBy('nama_siswa')->get()->groupBy('kelas_id'),
         ]);
+    }
+
+    public function naikKelas()
+    {
+        $this->jaga();
+
+        return view('admin.naik-kelas', [
+            'tahunAjaran' => DB::table('tahun_ajaran')->orderByDesc('id')->get(),
+            'tahunAktif' => $this->tahunAjaranAktif(),
+            'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
+            'siswa' => DB::table('siswa')
+                ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+                ->select('siswa.*', 'kelas.nama_kelas')
+                ->where('siswa.status', 'aktif')
+                ->orderBy('kelas.nama_kelas')
+                ->orderBy('siswa.nama_siswa')
+                ->get()
+                ->groupBy('kelas_id'),
+            'lulus' => DB::table('siswa')->where('status', 'lulus')->latest('tanggal_lulus')->get(),
+        ]);
+    }
+
+    public function simpanTahunAjaran(Request $request)
+    {
+        $this->jaga();
+        $data = $request->validate(['nama_tahun_ajaran' => 'required|unique:tahun_ajaran,nama_tahun_ajaran']);
+
+        DB::table('tahun_ajaran')->insert([
+            'nama_tahun_ajaran' => $data['nama_tahun_ajaran'],
+            'aktif' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('sukses', 'Tahun ajaran berhasil ditambahkan.');
+    }
+
+    public function aktifkanTahunAjaran(int $id)
+    {
+        $this->jaga();
+        DB::transaction(function () use ($id) {
+            DB::table('tahun_ajaran')->update(['aktif' => false, 'updated_at' => now()]);
+            DB::table('tahun_ajaran')->where('id', $id)->update(['aktif' => true, 'updated_at' => now()]);
+        });
+
+        return back()->with('sukses', 'Tahun ajaran aktif berhasil diubah.');
+    }
+
+    public function prosesNaikKelas(Request $request)
+    {
+        $this->jaga();
+        $data = $request->validate([
+            'kelas_asal_id' => 'required|exists:kelas,id',
+            'kelas_tujuan_id' => 'required|exists:kelas,id',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+        ]);
+
+        $siswa = DB::table('siswa')
+            ->where('kelas_id', $data['kelas_asal_id'])
+            ->where('status', 'aktif')
+            ->get();
+
+        DB::transaction(function () use ($data, $siswa) {
+            foreach ($siswa as $murid) {
+                DB::table('siswa')->where('id', $murid->id)->update([
+                    'kelas_id' => $data['kelas_tujuan_id'],
+                    'updated_at' => now(),
+                ]);
+
+                DB::table('riwayat_kelas')->updateOrInsert(
+                    ['siswa_id' => $murid->id, 'tahun_ajaran_id' => $data['tahun_ajaran_id']],
+                    ['kelas_id' => $data['kelas_tujuan_id'], 'created_at' => now(), 'updated_at' => now()]
+                );
+            }
+        });
+
+        return back()->with('sukses', $siswa->count().' siswa berhasil dinaikkan kelas.');
+    }
+
+    public function prosesLulusKelas(Request $request)
+    {
+        $this->jaga();
+        $data = $request->validate([
+            'kelas_id' => 'required|exists:kelas,id',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+        ]);
+
+        $siswa = DB::table('siswa')
+            ->where('kelas_id', $data['kelas_id'])
+            ->where('status', 'aktif')
+            ->get();
+
+        DB::transaction(function () use ($data, $siswa) {
+            foreach ($siswa as $murid) {
+                DB::table('riwayat_kelas')->updateOrInsert(
+                    ['siswa_id' => $murid->id, 'tahun_ajaran_id' => $data['tahun_ajaran_id']],
+                    ['kelas_id' => $data['kelas_id'], 'created_at' => now(), 'updated_at' => now()]
+                );
+
+                DB::table('siswa')->where('id', $murid->id)->update([
+                    'status' => 'lulus',
+                    'tanggal_lulus' => now()->toDateString(),
+                    'updated_at' => now(),
+                ]);
+            }
+        });
+
+        return back()->with('sukses', $siswa->count().' siswa berhasil diluluskan.');
     }
 
     public function simpanKelas(Request $request)

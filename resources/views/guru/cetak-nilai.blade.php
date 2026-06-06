@@ -136,6 +136,8 @@
             <div>: {{ $aktif->nama_mata_pelajaran }}</div>
             <div>Kelas</div>
             <div>: {{ $kelas->nama_kelas }}</div>
+            <div>Tahun Ajaran</div>
+            <div>: {{ $tahunAjaran->nama_tahun_ajaran }}</div>
             <div>Guru</div>
             <div>: {{ $guru->nama_guru }}</div>
             <div>Tanggal Cetak</div>

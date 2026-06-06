@@ -8,6 +8,24 @@ use Illuminate\Support\Facades\DB;
 
 class GuruController extends Controller
 {
+    private function tahunAjaranAktif()
+    {
+        $tahunAjaran = DB::table('tahun_ajaran')->where('aktif', true)->first();
+
+        if ($tahunAjaran) {
+            return $tahunAjaran;
+        }
+
+        $id = DB::table('tahun_ajaran')->insertGetId([
+            'nama_tahun_ajaran' => now()->month >= 7 ? now()->year.'/'.now()->addYear()->year : now()->subYear()->year.'/'.now()->year,
+            'aktif' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return DB::table('tahun_ajaran')->where('id', $id)->first();
+    }
+
     private function guru()
     {
         abort_unless(session('jenis_pengguna') === 'guru', 403);
@@ -27,6 +45,7 @@ class GuruController extends Controller
     public function nilai(Request $request, ?int $mapel = null)
     {
         $guru = $this->guru();
+        $tahunAjaran = $this->tahunAjaranAktif();
         $mapelGuru = DB::table('mata_pelajaran')->where('guru_id', $guru->id)->get();
         $aktif = $mapel ? $mapelGuru->firstWhere('id', $mapel) : $mapelGuru->first();
         $kelas = DB::table('kelas')->orderBy('nama_kelas')->get();
@@ -35,21 +54,29 @@ class GuruController extends Controller
             ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
             ->select('siswa.*', 'kelas.nama_kelas')
             ->when($kelasAktif, fn ($query) => $query->where('siswa.kelas_id', $kelasAktif))
+            ->where('siswa.status', 'aktif')
             ->orderBy('nama_siswa')
             ->get();
-        $nilai = $aktif ? DB::table('nilai')->where('mata_pelajaran_id', $aktif->id)->get()->keyBy('siswa_id') : collect();
+        $nilai = $aktif
+            ? DB::table('nilai')
+                ->where('mata_pelajaran_id', $aktif->id)
+                ->where('tahun_ajaran_id', $tahunAjaran->id)
+                ->get()
+                ->keyBy('siswa_id')
+            : collect();
 
-        return view('guru.nilai', compact('mapelGuru', 'aktif', 'kelas', 'kelasAktif', 'siswa', 'nilai'));
+        return view('guru.nilai', compact('mapelGuru', 'aktif', 'kelas', 'kelasAktif', 'siswa', 'nilai', 'tahunAjaran'));
     }
 
     public function simpanNilai(Request $request, int $mapel)
     {
         $guru = $this->guru();
+        $tahunAjaran = $this->tahunAjaranAktif();
         abort_unless(DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->exists(), 403);
 
         foreach ($request->input('nilai', []) as $siswaId => $isi) {
             DB::table('nilai')->updateOrInsert(
-                ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $mapel],
+                ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $mapel, 'tahun_ajaran_id' => $tahunAjaran->id],
                 [
                     'nilai_tugas' => $isi['nilai_tugas'] ?? 0,
                     'nilai_uts' => $isi['nilai_uts'] ?? 0,
@@ -67,6 +94,7 @@ class GuruController extends Controller
     public function cetakNilai(Request $request, int $mapel)
     {
         $guru = $this->guru();
+        $tahunAjaran = $this->tahunAjaranAktif();
         $aktif = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
 
         abort_unless($aktif, 403);
@@ -81,11 +109,16 @@ class GuruController extends Controller
             ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
             ->select('siswa.*', 'kelas.nama_kelas')
             ->where('siswa.kelas_id', $kelasId)
+            ->where('siswa.status', 'aktif')
             ->orderBy('nama_siswa')
             ->get();
-        $nilai = DB::table('nilai')->where('mata_pelajaran_id', $aktif->id)->get()->keyBy('siswa_id');
+        $nilai = DB::table('nilai')
+            ->where('mata_pelajaran_id', $aktif->id)
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->get()
+            ->keyBy('siswa_id');
 
-        return view('guru.cetak-nilai', compact('guru', 'aktif', 'kelas', 'siswa', 'nilai'));
+        return view('guru.cetak-nilai', compact('guru', 'aktif', 'kelas', 'siswa', 'nilai', 'tahunAjaran'));
     }
 
     public function catatan()
@@ -142,7 +175,7 @@ class GuruController extends Controller
         $this->guru();
         return view('guru.data-siswa', [
             'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
-            'siswa' => DB::table('siswa')->orderBy('nama_siswa')->get()->groupBy('kelas_id'),
+            'siswa' => DB::table('siswa')->where('status', 'aktif')->orderBy('nama_siswa')->get()->groupBy('kelas_id'),
         ]);
     }
 }

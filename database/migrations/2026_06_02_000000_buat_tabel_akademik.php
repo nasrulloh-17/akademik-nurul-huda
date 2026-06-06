@@ -8,6 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::create('tahun_ajaran', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama_tahun_ajaran')->unique();
+            $table->boolean('aktif')->default(false);
+            $table->timestamps();
+        });
+
         Schema::create('pengguna', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
@@ -55,7 +62,18 @@ return new class extends Migration
             $table->string('telepon')->nullable();
             $table->text('alamat')->nullable();
             $table->string('foto_profil')->nullable();
+            $table->enum('status', ['aktif', 'lulus'])->default('aktif');
+            $table->date('tanggal_lulus')->nullable();
             $table->timestamps();
+        });
+
+        Schema::create('riwayat_kelas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('siswa_id')->constrained('siswa')->cascadeOnDelete();
+            $table->foreignId('kelas_id')->nullable()->constrained('kelas')->nullOnDelete();
+            $table->foreignId('tahun_ajaran_id')->constrained('tahun_ajaran')->cascadeOnDelete();
+            $table->timestamps();
+            $table->unique(['siswa_id', 'tahun_ajaran_id']);
         });
 
         Schema::create('slider', function (Blueprint $table) {
@@ -113,12 +131,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('siswa_id')->constrained('siswa')->cascadeOnDelete();
             $table->foreignId('mata_pelajaran_id')->constrained('mata_pelajaran')->cascadeOnDelete();
+            $table->foreignId('tahun_ajaran_id')->nullable()->constrained('tahun_ajaran')->nullOnDelete();
             $table->decimal('nilai_tugas', 5, 2)->default(0);
             $table->decimal('nilai_uts', 5, 2)->default(0);
             $table->decimal('nilai_uas', 5, 2)->default(0);
             $table->text('catatan_guru')->nullable();
             $table->timestamps();
-            $table->unique(['siswa_id', 'mata_pelajaran_id']);
+            $table->unique(['siswa_id', 'mata_pelajaran_id', 'tahun_ajaran_id'], 'nilai_siswa_mapel_tahun_unique');
         });
 
         Schema::create('catatan_walikelas', function (Blueprint $table) {
@@ -142,7 +161,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['tagihan', 'catatan_walikelas', 'nilai', 'mata_pelajaran', 'galeri', 'prestasi', 'informasi_sekolah', 'berita', 'slider', 'siswa', 'guru_role', 'guru', 'kelas', 'pengguna'] as $table) {
+        foreach (['tagihan', 'catatan_walikelas', 'nilai', 'mata_pelajaran', 'galeri', 'prestasi', 'informasi_sekolah', 'berita', 'slider', 'riwayat_kelas', 'siswa', 'guru_role', 'guru', 'kelas', 'pengguna', 'tahun_ajaran'] as $table) {
             Schema::dropIfExists($table);
         }
     }

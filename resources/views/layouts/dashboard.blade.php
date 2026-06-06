@@ -33,6 +33,7 @@
                 <a class="{{ request()->routeIs('admin.guru') ? 'active' : '' }}" href="{{ route('admin.guru') }}">Guru</a>
                 <a class="{{ request()->routeIs('admin.siswa') ? 'active' : '' }}" href="{{ route('admin.siswa') }}">Siswa</a>
                 <a class="{{ request()->routeIs('admin.kelas') ? 'active' : '' }}" href="{{ route('admin.kelas') }}">Kelas</a>
+                <a class="{{ request()->routeIs('admin.naik-kelas') ? 'active' : '' }}" href="{{ route('admin.naik-kelas') }}">Naik Kelas</a>
                 <a class="{{ request()->routeIs('admin.mata-pelajaran') ? 'active' : '' }}" href="{{ route('admin.mata-pelajaran') }}">Mata Pelajaran</a>
             @elseif($jenisPengguna === 'guru')
                 <a class="{{ request()->routeIs('guru.dashboard') ? 'active' : '' }}" href="{{ route('guru.dashboard') }}">Dashboard</a>

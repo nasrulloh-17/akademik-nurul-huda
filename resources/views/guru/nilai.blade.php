@@ -42,6 +42,7 @@
 
         <div class="card">
             <h3>{{ $aktif->nama_mata_pelajaran }}</h3>
+            <p class="muted">Tahun ajaran aktif: {{ $tahunAjaran->nama_tahun_ajaran }}</p>
 
             @unless($kelasAktif)
                 <p class="muted">Pilih kelas terlebih dahulu agar nilai yang dicetak sesuai kelas.</p>

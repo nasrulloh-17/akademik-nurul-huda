@@ -41,6 +41,7 @@
         <th>Kelas</th>
         <th>Jenis Kelamin</th>
         <th>Telepon</th>
+        <th>Status</th>
         <th>Ubah Password</th>
         <th>Aksi</th>
     </tr>
@@ -52,6 +53,7 @@
             <td>{{ $item->nama_kelas }}</td>
             <td>{{ $item->jenis_kelamin }}</td>
             <td>{{ $item->telepon }}</td>
+            <td>{{ $item->status ?? 'aktif' }}</td>
             <td>
                 <form method="post" action="{{ route('admin.siswa.password', $item->id) }}">
                     @csrf
