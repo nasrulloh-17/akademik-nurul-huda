@@ -30,6 +30,7 @@
                 <a class="{{ request()->routeIs('admin.prestasi') ? 'active' : '' }}" href="{{ route('admin.prestasi') }}">Prestasi</a>
                 <a class="{{ request()->routeIs('admin.galeri') ? 'active' : '' }}" href="{{ route('admin.galeri') }}">Galeri</a>
                 <a class="{{ request()->routeIs('admin.informasi') ? 'active' : '' }}" href="{{ route('admin.informasi') }}">Informasi Sekolah</a>
+                <a class="{{ request()->routeIs('admin.data-sekolah') ? 'active' : '' }}" href="{{ route('admin.data-sekolah') }}">Data Sekolah</a>
                 <a class="{{ request()->routeIs('admin.guru') ? 'active' : '' }}" href="{{ route('admin.guru') }}">Guru</a>
                 <a class="{{ request()->routeIs('admin.siswa') ? 'active' : '' }}" href="{{ route('admin.siswa') }}">Siswa</a>
                 <a class="{{ request()->routeIs('admin.kelas') ? 'active' : '' }}" href="{{ route('admin.kelas') }}">Kelas</a>

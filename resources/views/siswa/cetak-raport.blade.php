@@ -48,6 +48,10 @@
         <p>Nama Siswa: <strong>{{ $siswa->nama_siswa }}</strong></p>
         <p>NIS: {{ $siswa->nis }}</p>
         <p>Kelas: {{ $siswa->nama_kelas }}</p>
+        <p>
+            Peringkat Kelas Tahun Ajaran Aktif {{ $tahunAjaranAktif->nama_tahun_ajaran }}:
+            {{ $peringkat ? $peringkat.' dari '.$jumlahSiswaKelas.' siswa' : 'Belum tersedia' }}
+        </p>
     </div>
 
     @forelse($tahunRaport as $tahun)

@@ -9,6 +9,24 @@ use Illuminate\Support\Str;
 
 class SiswaController extends Controller
 {
+    private function tahunAjaranAktif()
+    {
+        $tahunAjaran = DB::table('tahun_ajaran')->where('aktif', true)->first();
+
+        if ($tahunAjaran) {
+            return $tahunAjaran;
+        }
+
+        $id = DB::table('tahun_ajaran')->insertGetId([
+            'nama_tahun_ajaran' => now()->month >= 7 ? now()->year.'/'.now()->addYear()->year : now()->subYear()->year.'/'.now()->year,
+            'aktif' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return DB::table('tahun_ajaran')->where('id', $id)->first();
+    }
+
     private function siswa()
     {
         abort_unless(session('jenis_pengguna') === 'siswa', 403);
@@ -69,6 +87,7 @@ class SiswaController extends Controller
     private function dataRaport(): array
     {
         $siswa = $this->siswa();
+        $tahunAjaran = $this->tahunAjaranAktif();
         $nilai = DB::table('nilai')
             ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')
             ->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')
@@ -95,14 +114,37 @@ class SiswaController extends Controller
         $kegiatanPerTahun = $kegiatanTambahan
             ->groupBy(fn ($item) => $item->nama_tahun_ajaran ?? 'Tanpa Tahun Ajaran')
             ->map(fn ($items) => $items->groupBy('kategori'));
+        $peringkatKelas = DB::table('siswa')
+            ->leftJoin('nilai', function ($join) use ($tahunAjaran) {
+                $join->on('nilai.siswa_id', '=', 'siswa.id')
+                    ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
+            })
+            ->where('siswa.kelas_id', $siswa->kelas_id)
+            ->where('siswa.status', 'aktif')
+            ->select(
+                'siswa.id',
+                DB::raw('AVG((nilai.nilai_tugas + nilai.nilai_uts + nilai.nilai_uas) / 3) as rata_rata_raport')
+            )
+            ->groupBy('siswa.id')
+            ->get()
+            ->sortBy([
+                ['rata_rata_raport', 'desc'],
+                ['id', 'asc'],
+            ])
+            ->values();
+        $peringkat = $peringkatKelas->search(fn ($item) => (int) $item->id === (int) $siswa->id);
+        $dataPeringkat = $peringkat === false ? null : $peringkatKelas[$peringkat];
 
         return [
             'siswa' => DB::table('siswa')->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')->select('siswa.*', 'kelas.nama_kelas')->where('siswa.id', $siswa->id)->first(),
+            'tahunAjaranAktif' => $tahunAjaran,
             'nilai' => $nilai,
             'nilaiPerTahun' => $nilaiPerTahun,
             'kegiatanTambahan' => $kegiatanTambahan,
             'kegiatanPerTahun' => $kegiatanPerTahun,
             'tahunRaport' => $nilaiPerTahun->keys()->merge($kegiatanPerTahun->keys())->unique(),
+            'peringkat' => $dataPeringkat && $dataPeringkat->rata_rata_raport !== null ? $peringkat + 1 : null,
+            'jumlahSiswaKelas' => $peringkatKelas->count(),
             'catatan' => DB::table('catatan_walikelas')->where('siswa_id', $siswa->id)->latest()->get(),
         ];
     }

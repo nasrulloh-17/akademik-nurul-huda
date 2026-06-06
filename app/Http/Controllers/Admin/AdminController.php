@@ -193,6 +193,39 @@ class AdminController extends Controller
         return back()->with('sukses', 'Informasi dihapus.');
     }
 
+    public function dataSekolah()
+    {
+        $this->jaga();
+
+        return view('admin.data-sekolah', [
+            'dataSekolah' => DB::table('data_sekolah')->first(),
+        ]);
+    }
+
+    public function simpanDataSekolah(Request $request)
+    {
+        $this->jaga();
+        $data = $request->validate([
+            'kepala_mts' => 'nullable|string|max:255',
+            'kepala_sma' => 'nullable|string|max:255',
+            'alamat' => 'nullable|string',
+        ]);
+
+        $data['nama_mts'] = "MTs Ma'arif 20";
+        $data['nama_sma'] = 'SMA Nurul Huda';
+        $data['updated_at'] = now();
+        $dataSekolah = DB::table('data_sekolah')->first();
+
+        if ($dataSekolah) {
+            DB::table('data_sekolah')->where('id', $dataSekolah->id)->update($data);
+        } else {
+            $data['created_at'] = now();
+            DB::table('data_sekolah')->insert($data);
+        }
+
+        return back()->with('sukses', 'Data sekolah berhasil disimpan.');
+    }
+
     public function guru()
     {
         $this->jaga();

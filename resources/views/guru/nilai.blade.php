@@ -50,6 +50,7 @@
 
             <table>
                 <tr>
+                    <th>NIS</th>
                     <th>Nama Siswa</th>
                     <th>Kelas</th>
                     <th>Nilai Tugas</th>
@@ -63,6 +64,7 @@
                     @php($n = $nilai[$murid->id] ?? null)
 
                     <tr>
+                        <td>{{ $murid->nis }}</td>
                         <td>{{ $murid->nama_siswa }}</td>
                         <td>{{ $murid->nama_kelas }}</td>
                         <td>

@@ -52,6 +52,10 @@
         <p>Kelas: {{ $siswa->nama_kelas }}</p>
         <p>Tahun Ajaran: {{ $tahunAjaran->nama_tahun_ajaran }}</p>
         <p>Wali Kelas: {{ $guru->nama_guru }}</p>
+        <p>
+            Peringkat Kelas:
+            {{ $peringkat ? $peringkat.' dari '.$jumlahSiswaKelas.' siswa' : 'Belum tersedia' }}
+        </p>
     </div>
 
     <h3>Nilai Mata Pelajaran</h3>

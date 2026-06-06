@@ -273,6 +273,26 @@ class GuruController extends Controller
             ->orderBy('kegiatan')
             ->get()
             ->groupBy('kategori');
+        $peringkatKelas = DB::table('siswa')
+            ->leftJoin('nilai', function ($join) use ($tahunAjaran) {
+                $join->on('nilai.siswa_id', '=', 'siswa.id')
+                    ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
+            })
+            ->where('siswa.kelas_id', $siswa->kelas_id)
+            ->where('siswa.status', 'aktif')
+            ->select(
+                'siswa.id',
+                DB::raw('AVG((nilai.nilai_tugas + nilai.nilai_uts + nilai.nilai_uas) / 3) as rata_rata_raport')
+            )
+            ->groupBy('siswa.id')
+            ->get()
+            ->sortBy([
+                ['rata_rata_raport', 'desc'],
+                ['id', 'asc'],
+            ])
+            ->values();
+        $peringkat = $peringkatKelas->search(fn ($item) => (int) $item->id === (int) $siswa->id);
+        $dataPeringkat = $peringkat === false ? null : $peringkatKelas[$peringkat];
 
         return view('guru.cetak-raport', [
             'guru' => $guru,
@@ -280,6 +300,8 @@ class GuruController extends Controller
             'tahunAjaran' => $tahunAjaran,
             'nilai' => $nilai,
             'kegiatanTambahan' => $kegiatanTambahan,
+            'peringkat' => $dataPeringkat && $dataPeringkat->rata_rata_raport !== null ? $peringkat + 1 : null,
+            'jumlahSiswaKelas' => $peringkatKelas->count(),
         ]);
     }
 

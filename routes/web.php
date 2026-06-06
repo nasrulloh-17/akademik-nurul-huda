@@ -37,6 +37,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/informasi', [AdminController::class, 'informasi'])->name('informasi');
     Route::post('/informasi', [AdminController::class, 'simpanInformasi'])->name('informasi.simpan');
     Route::post('/informasi/{id}/hapus', [AdminController::class, 'hapusInformasi'])->name('informasi.hapus');
+    Route::get('/data-sekolah', [AdminController::class, 'dataSekolah'])->name('data-sekolah');
+    Route::post('/data-sekolah', [AdminController::class, 'simpanDataSekolah'])->name('data-sekolah.simpan');
     Route::get('/guru', [AdminController::class, 'guru'])->name('guru');
     Route::post('/guru', [AdminController::class, 'simpanGuru'])->name('guru.simpan');
     Route::post('/guru/{id}/ubah', [AdminController::class, 'ubahGuru'])->name('guru.ubah');

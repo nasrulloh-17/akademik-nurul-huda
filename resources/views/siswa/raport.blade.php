@@ -9,6 +9,10 @@
 
 <div class="card">
     <h3>{{ $siswa->nama_siswa }} - {{ $siswa->nama_kelas }}</h3>
+    <p class="muted">
+        Peringkat kelas tahun ajaran aktif {{ $tahunAjaranAktif->nama_tahun_ajaran }}:
+        {{ $peringkat ? $peringkat.' dari '.$jumlahSiswaKelas.' siswa' : 'Belum tersedia' }}
+    </p>
 
     @forelse($tahunRaport as $tahun)
         @php($nilaiTahun = $nilaiPerTahun[$tahun] ?? collect())

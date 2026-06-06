@@ -35,12 +35,14 @@
             <div style="overflow-x:auto;margin-bottom:24px">
                 <table>
                     <tr>
+                        <th>NIS</th>
                         <th>Nama Siswa</th>
                         <th>Cetak Raport</th>
                     </tr>
 
                     @foreach($siswa as $murid)
                         <tr>
+                            <td>{{ $murid->nis }}</td>
                             <td>{{ $murid->nama_siswa }}</td>
                             <td>
                                 <a class="btn alt" href="{{ route('guru.raport.cetak', $murid->id) }}" target="_blank">
@@ -59,6 +61,7 @@
                     <div style="overflow-x:auto">
                         <table style="min-width:760px">
                             <tr>
+                                <th style="width:140px">NIS</th>
                                 <th style="width:220px">Nama Siswa</th>
                                 @foreach($kegiatanList as $kegiatan)
                                     <th>{{ $kegiatan }}</th>
@@ -67,6 +70,7 @@
 
                             @foreach($siswa as $murid)
                                 <tr>
+                                    <td>{{ $murid->nis }}</td>
                                     <td>
                                         <strong>{{ $murid->nama_siswa }}</strong>
                                     </td>
