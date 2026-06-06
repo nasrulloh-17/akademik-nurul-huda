@@ -16,6 +16,8 @@ Route::get('/login/guru', [AuthController::class, 'formGuru'])->name('guru.login
 Route::post('/login/guru', [AuthController::class, 'loginGuru'])->name('guru.login.proses');
 Route::get('/login/siswa', [AuthController::class, 'formSiswa'])->name('siswa.login');
 Route::post('/login/siswa', [AuthController::class, 'loginSiswa'])->name('siswa.login.proses');
+Route::get('/ubah-password', [AuthController::class, 'formUbahPassword'])->name('password.form');
+Route::post('/ubah-password', [AuthController::class, 'ubahPassword'])->name('password.update');
 Route::post('/keluar', [AuthController::class, 'keluar'])->name('keluar');
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -47,12 +49,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/kelas', [AdminController::class, 'simpanKelas'])->name('kelas.simpan');
     Route::get('/mata-pelajaran', [AdminController::class, 'mataPelajaran'])->name('mata-pelajaran');
     Route::post('/mata-pelajaran', [AdminController::class, 'simpanMataPelajaran'])->name('mata-pelajaran.simpan');
+    Route::post('/mata-pelajaran/{id}/ubah', [AdminController::class, 'ubahMataPelajaran'])->name('mata-pelajaran.ubah');
+    Route::post('/mata-pelajaran/{id}/hapus', [AdminController::class, 'hapusMataPelajaran'])->name('mata-pelajaran.hapus');
 });
 
 Route::prefix('guru')->name('guru.')->group(function () {
     Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');
     Route::get('/nilai/{mapel?}', [GuruController::class, 'nilai'])->name('nilai');
     Route::post('/nilai/{mapel}', [GuruController::class, 'simpanNilai'])->name('nilai.simpan');
+    Route::get('/nilai/{mapel}/cetak', [GuruController::class, 'cetakNilai'])->name('nilai.cetak');
     Route::get('/catatan-walikelas', [GuruController::class, 'catatan'])->name('catatan');
     Route::post('/catatan-walikelas', [GuruController::class, 'simpanCatatan'])->name('catatan.simpan');
     Route::get('/data-siswa', [GuruController::class, 'dataSiswa'])->name('data-siswa');

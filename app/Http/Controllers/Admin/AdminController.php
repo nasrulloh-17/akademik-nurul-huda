@@ -325,7 +325,13 @@ class AdminController extends Controller
     {
         $this->jaga();
         return view('admin.mata-pelajaran', [
-            'mapel' => DB::table('mata_pelajaran')->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')->select('mata_pelajaran.*', 'guru.nama_guru')->latest('mata_pelajaran.id')->get(),
+            'mapel' => DB::table('mata_pelajaran')
+                ->leftJoin('kelas', 'kelas.id', '=', 'mata_pelajaran.kelas_id')
+                ->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')
+                ->select('mata_pelajaran.*', 'kelas.nama_kelas', 'guru.nama_guru')
+                ->latest('mata_pelajaran.id')
+                ->get(),
+            'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
             'guru' => DB::table('guru')->orderBy('nama_guru')->get(),
         ]);
     }
@@ -333,10 +339,39 @@ class AdminController extends Controller
     public function simpanMataPelajaran(Request $request)
     {
         $this->jaga();
-        $data = $request->validate(['nama_mata_pelajaran' => 'required', 'guru_id' => 'nullable|exists:guru,id', 'keterangan' => 'nullable']);
+        $data = $request->validate([
+            'nama_mata_pelajaran' => 'required',
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'guru_id' => 'nullable|exists:guru,id',
+            'keterangan' => 'nullable',
+        ]);
         $data['created_at'] = now();
         $data['updated_at'] = now();
         DB::table('mata_pelajaran')->insert($data);
         return back()->with('sukses', 'Mata pelajaran berhasil disimpan.');
+    }
+
+    public function ubahMataPelajaran(Request $request, int $id)
+    {
+        $this->jaga();
+        $data = $request->validate([
+            'nama_mata_pelajaran' => 'required',
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'guru_id' => 'nullable|exists:guru,id',
+        ]);
+        $data['updated_at'] = now();
+
+        DB::table('mata_pelajaran')->where('id', $id)->update($data);
+
+        return back()->with('sukses', 'Mata pelajaran berhasil diubah.');
+    }
+
+    public function hapusMataPelajaran(int $id)
+    {
+        $this->jaga();
+        DB::table('nilai')->where('mata_pelajaran_id', $id)->delete();
+        DB::table('mata_pelajaran')->where('id', $id)->delete();
+
+        return back()->with('sukses', 'Mata pelajaran berhasil dihapus.');
     }
 }

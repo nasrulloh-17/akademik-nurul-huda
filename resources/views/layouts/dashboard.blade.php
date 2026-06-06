@@ -45,6 +45,8 @@
                 <a class="{{ request()->routeIs('siswa.raport') ? 'active' : '' }}" href="{{ route('siswa.raport') }}">Raport</a>
                 <a class="{{ request()->routeIs('siswa.tagihan') ? 'active' : '' }}" href="{{ route('siswa.tagihan') }}">Tagihan</a>
             @endif
+
+            <a class="{{ request()->routeIs('password.form') ? 'active' : '' }}" href="{{ route('password.form') }}">Ubah Password</a>
         </nav>
     </aside>
 

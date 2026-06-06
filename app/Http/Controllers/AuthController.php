@@ -38,6 +38,36 @@ class AuthController extends Controller
         return $this->login($request, 'siswa', 'siswa.dashboard');
     }
 
+    public function formUbahPassword()
+    {
+        abort_unless(session('pengguna_id'), 403);
+
+        return view('auth.ubah-password');
+    }
+
+    public function ubahPassword(Request $request)
+    {
+        abort_unless(session('pengguna_id'), 403);
+
+        $data = $request->validate([
+            'kata_sandi_lama' => ['required'],
+            'kata_sandi_baru' => ['required', 'min:6', 'confirmed'],
+        ]);
+
+        $pengguna = DB::table('pengguna')->where('id', session('pengguna_id'))->first();
+
+        if (! $pengguna || ! Hash::check($data['kata_sandi_lama'], $pengguna->kata_sandi)) {
+            return back()->withErrors(['kata_sandi_lama' => 'Password lama tidak sesuai.']);
+        }
+
+        DB::table('pengguna')->where('id', $pengguna->id)->update([
+            'kata_sandi' => Hash::make($data['kata_sandi_baru']),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('sukses', 'Password berhasil diubah.');
+    }
+
     private function login(Request $request, string $jenis, string $tujuan)
     {
         $data = $request->validate([

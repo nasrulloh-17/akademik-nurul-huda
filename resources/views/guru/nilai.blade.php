@@ -14,11 +14,38 @@
 </div>
 
 @if($aktif)
+    <div class="card">
+        <form method="get" action="{{ route('guru.nilai', $aktif->id) }}">
+            <div class="form-grid">
+                <select name="kelas_id" required>
+                    <option value="">Pilih kelas</option>
+                    @foreach($kelas as $item)
+                        <option value="{{ $item->id }}" @selected((int) $kelasAktif === $item->id)>
+                            {{ $item->nama_kelas }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <button class="btn" type="submit">Tampilkan Kelas</button>
+
+                @if($kelasAktif)
+                    <a class="btn alt" href="{{ route('guru.nilai.cetak', ['mapel' => $aktif->id, 'kelas_id' => $kelasAktif]) }}" target="_blank">
+                        Cetak Nilai PDF
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+
     <form method="post" action="{{ route('guru.nilai.simpan', $aktif->id) }}">
         @csrf
 
         <div class="card">
             <h3>{{ $aktif->nama_mata_pelajaran }}</h3>
+
+            @unless($kelasAktif)
+                <p class="muted">Pilih kelas terlebih dahulu agar nilai yang dicetak sesuai kelas.</p>
+            @endunless
 
             <table>
                 <tr>

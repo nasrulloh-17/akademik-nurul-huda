@@ -24,15 +24,22 @@ class GuruController extends Controller
         ]);
     }
 
-    public function nilai(?int $mapel = null)
+    public function nilai(Request $request, ?int $mapel = null)
     {
         $guru = $this->guru();
         $mapelGuru = DB::table('mata_pelajaran')->where('guru_id', $guru->id)->get();
         $aktif = $mapel ? $mapelGuru->firstWhere('id', $mapel) : $mapelGuru->first();
-        $siswa = DB::table('siswa')->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')->select('siswa.*', 'kelas.nama_kelas')->orderBy('nama_siswa')->get();
+        $kelas = DB::table('kelas')->orderBy('nama_kelas')->get();
+        $kelasAktif = $request->integer('kelas_id') ?: ($aktif->kelas_id ?? null);
+        $siswa = DB::table('siswa')
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+            ->select('siswa.*', 'kelas.nama_kelas')
+            ->when($kelasAktif, fn ($query) => $query->where('siswa.kelas_id', $kelasAktif))
+            ->orderBy('nama_siswa')
+            ->get();
         $nilai = $aktif ? DB::table('nilai')->where('mata_pelajaran_id', $aktif->id)->get()->keyBy('siswa_id') : collect();
 
-        return view('guru.nilai', compact('mapelGuru', 'aktif', 'siswa', 'nilai'));
+        return view('guru.nilai', compact('mapelGuru', 'aktif', 'kelas', 'kelasAktif', 'siswa', 'nilai'));
     }
 
     public function simpanNilai(Request $request, int $mapel)
@@ -55,6 +62,30 @@ class GuruController extends Controller
         }
 
         return back()->with('sukses', 'Nilai berhasil diperbarui.');
+    }
+
+    public function cetakNilai(Request $request, int $mapel)
+    {
+        $guru = $this->guru();
+        $aktif = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
+
+        abort_unless($aktif, 403);
+
+        $kelasId = $request->integer('kelas_id');
+        $kelasId = $kelasId ?: $aktif->kelas_id;
+        $kelas = DB::table('kelas')->where('id', $kelasId)->first();
+
+        abort_unless($kelas, 404);
+
+        $siswa = DB::table('siswa')
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+            ->select('siswa.*', 'kelas.nama_kelas')
+            ->where('siswa.kelas_id', $kelasId)
+            ->orderBy('nama_siswa')
+            ->get();
+        $nilai = DB::table('nilai')->where('mata_pelajaran_id', $aktif->id)->get()->keyBy('siswa_id');
+
+        return view('guru.cetak-nilai', compact('guru', 'aktif', 'kelas', 'siswa', 'nilai'));
     }
 
     public function catatan()

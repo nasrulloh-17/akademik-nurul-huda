@@ -102,6 +102,7 @@ return new class extends Migration
 
         Schema::create('mata_pelajaran', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('kelas_id')->nullable()->constrained('kelas')->nullOnDelete();
             $table->foreignId('guru_id')->nullable()->constrained('guru')->nullOnDelete();
             $table->string('nama_mata_pelajaran');
             $table->text('keterangan')->nullable();
