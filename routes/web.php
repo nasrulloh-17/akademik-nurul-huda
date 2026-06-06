@@ -29,6 +29,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/prestasi', [AdminController::class, 'prestasi'])->name('prestasi');
     Route::post('/prestasi', [AdminController::class, 'simpanPrestasi'])->name('prestasi.simpan');
     Route::post('/prestasi/{id}/hapus', [AdminController::class, 'hapusPrestasi'])->name('prestasi.hapus');
+    Route::get('/galeri', [AdminController::class, 'galeri'])->name('galeri');
+    Route::post('/galeri', [AdminController::class, 'simpanGaleri'])->name('galeri.simpan');
+    Route::post('/galeri/{id}/hapus', [AdminController::class, 'hapusGaleri'])->name('galeri.hapus');
     Route::get('/informasi', [AdminController::class, 'informasi'])->name('informasi');
     Route::post('/informasi', [AdminController::class, 'simpanInformasi'])->name('informasi.simpan');
     Route::post('/informasi/{id}/hapus', [AdminController::class, 'hapusInformasi'])->name('informasi.hapus');

@@ -124,6 +124,33 @@ class AdminController extends Controller
         return back()->with('sukses', 'Prestasi dihapus.');
     }
 
+    public function galeri()
+    {
+        $this->jaga();
+        return view('admin.galeri', ['galeri' => DB::table('galeri')->latest()->get()]);
+    }
+
+    public function simpanGaleri(Request $request)
+    {
+        $this->jaga();
+        $data = $request->validate([
+            'judul' => 'nullable',
+            'foto' => 'required|image',
+        ]);
+        $data['foto'] = $this->unggah($request, 'foto', 'galeri');
+        $data['created_at'] = now();
+        $data['updated_at'] = now();
+        DB::table('galeri')->insert($data);
+        return back()->with('sukses', 'Foto galeri berhasil disimpan.');
+    }
+
+    public function hapusGaleri(int $id)
+    {
+        $this->jaga();
+        DB::table('galeri')->where('id', $id)->delete();
+        return back()->with('sukses', 'Foto galeri dihapus.');
+    }
+
     public function informasi()
     {
         $this->jaga();

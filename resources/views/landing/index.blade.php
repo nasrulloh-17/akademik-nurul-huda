@@ -447,6 +447,38 @@
         cursor: not-allowed;
     }
 
+    .galeri-masonry {
+        column-count: 4;
+        column-gap: 16px;
+        max-width: 1180px;
+        margin: 28px auto 0;
+        text-align: left;
+    }
+
+    .galeri-item {
+        display: inline-block;
+        width: 100%;
+        margin: 0 0 16px;
+        overflow: hidden;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 14px 34px rgba(0, 71, 76, .1);
+        break-inside: avoid;
+    }
+
+    .galeri-item img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .galeri-caption {
+        padding: 10px 12px;
+        color: var(--gelap);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
     .bantuan {
         padding: 54px 7vw;
         text-align: center;
@@ -576,6 +608,10 @@
         .prestasi-card {
             flex-basis: calc((100% - 28px) / 3);
         }
+
+        .galeri-masonry {
+            column-count: 3;
+        }
     }
 
     @media (max-width: 850px) {
@@ -624,11 +660,19 @@
         .prestasi-card {
             flex-basis: calc((100% - 14px) / 2);
         }
+
+        .galeri-masonry {
+            column-count: 2;
+        }
     }
 
     @media (max-width: 560px) {
         .prestasi-card {
             flex-basis: 100%;
+        }
+
+        .galeri-masonry {
+            column-count: 1;
         }
     }
 </style>
@@ -639,6 +683,9 @@
     <div class="nav-actions">
         <div class="nav-menu">
             <a href="#pendaftaran">Pendaftaran</a>
+            <a href="#prestasi">Prestasi</a>
+            <a href="#galeri">Galeri</a>
+            <a href="#jenjang">Jenjang</a>            
             <a href="#berita">Berita</a>
             <a href="#kontak">Kontak</a>
         </div>
@@ -800,6 +847,26 @@
             </div>
         @endif
     </div>
+</section>
+
+<section class="section" id="galeri">
+    <h2>Galeri Foto</h2>
+
+    @if($galeri->count())
+        <div class="galeri-masonry">
+            @foreach($galeri as $item)
+                <figure class="galeri-item">
+                    <img src="{{ asset($item->foto) }}" alt="{{ $item->judul ?: 'Foto galeri Yayasan Nurul Huda Munjuk' }}">
+
+                    @if($item->judul)
+                        <figcaption class="galeri-caption">{{ $item->judul }}</figcaption>
+                    @endif
+                </figure>
+            @endforeach
+        </div>
+    @else
+        <div class="clean-item">Galeri foto akan tampil setelah diisi admin.</div>
+    @endif
 </section>
 
 <section class="section" id="pendaftaran" style="background:var(--muda)">

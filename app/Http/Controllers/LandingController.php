@@ -12,6 +12,7 @@ class LandingController extends Controller
             'slider' => DB::table('slider')->where('aktif', true)->latest()->get(),
             'berita' => DB::table('berita')->latest('tanggal_berita')->limit(6)->get(),
             'prestasi' => DB::table('prestasi')->latest()->get(),
+            'galeri' => DB::table('galeri')->latest()->get(),
             'informasi' => DB::table('informasi_sekolah')->latest()->get(),
         ]);
     }
