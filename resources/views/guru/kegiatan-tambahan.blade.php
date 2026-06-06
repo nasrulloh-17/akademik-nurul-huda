@@ -32,6 +32,26 @@
         <p class="muted">Tahun ajaran aktif: {{ $tahunAjaran->nama_tahun_ajaran }}</p>
 
         @if($siswa->isNotEmpty())
+            <div style="overflow-x:auto;margin-bottom:24px">
+                <table>
+                    <tr>
+                        <th>Nama Siswa</th>
+                        <th>Cetak Raport</th>
+                    </tr>
+
+                    @foreach($siswa as $murid)
+                        <tr>
+                            <td>{{ $murid->nama_siswa }}</td>
+                            <td>
+                                <a class="btn alt" href="{{ route('guru.raport.cetak', $murid->id) }}" target="_blank">
+                                    Cetak Raport
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </table>
+            </div>
+
             @foreach($kegiatanTambahan as $kategori => $kegiatanList)
                 <section style="margin-bottom:24px">
                     <h4>{{ $kategori }}</h4>

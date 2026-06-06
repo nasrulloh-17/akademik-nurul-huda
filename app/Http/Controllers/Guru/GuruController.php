@@ -229,6 +229,60 @@ class GuruController extends Controller
         ]);
     }
 
+    public function cetakRaportSiswa(int $siswaId)
+    {
+        $guru = $this->guru();
+        $kelasWali = $this->kelasWali($guru->id);
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $siswa = DB::table('siswa')
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+            ->select('siswa.*', 'kelas.nama_kelas')
+            ->where('siswa.id', $siswaId)
+            ->first();
+
+        abort_unless($siswa, 404);
+        abort_unless($kelasWali->contains('id', $siswa->kelas_id), 403);
+
+        $nilai = DB::table('mata_pelajaran')
+            ->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')
+            ->leftJoin('nilai', function ($join) use ($siswa, $tahunAjaran) {
+                $join->on('nilai.mata_pelajaran_id', '=', 'mata_pelajaran.id')
+                    ->where('nilai.siswa_id', $siswa->id)
+                    ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
+            })
+            ->where(function ($query) use ($siswa) {
+                $query->where('mata_pelajaran.kelas_id', $siswa->kelas_id)
+                    ->orWhereNull('mata_pelajaran.kelas_id');
+            })
+            ->select(
+                'mata_pelajaran.id',
+                'mata_pelajaran.nama_mata_pelajaran',
+                'guru.nama_guru',
+                'nilai.nilai_tugas',
+                'nilai.nilai_uts',
+                'nilai.nilai_uas',
+                'nilai.catatan_guru'
+            )
+            ->orderBy('mata_pelajaran.nama_mata_pelajaran')
+            ->get();
+        $kegiatanTambahan = DB::table('nilai_kegiatan_tambahan')
+            ->where('nilai_kegiatan_tambahan.siswa_id', $siswa->id)
+            ->where('nilai_kegiatan_tambahan.tahun_ajaran_id', $tahunAjaran->id)
+            ->select('nilai_kegiatan_tambahan.*')
+            ->orderBy('kategori')
+            ->orderBy('kegiatan')
+            ->get()
+            ->groupBy('kategori');
+
+        return view('guru.cetak-raport', [
+            'guru' => $guru,
+            'siswa' => $siswa,
+            'tahunAjaran' => $tahunAjaran,
+            'nilai' => $nilai,
+            'kegiatanTambahan' => $kegiatanTambahan,
+        ]);
+    }
+
     public function simpanKegiatanTambahan(Request $request)
     {
         $guru = $this->guru();

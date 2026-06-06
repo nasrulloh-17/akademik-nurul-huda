@@ -66,6 +66,7 @@ Route::prefix('guru')->name('guru.')->group(function () {
     Route::get('/nilai/{mapel}/cetak', [GuruController::class, 'cetakNilai'])->name('nilai.cetak');
     Route::get('/kegiatan-tambahan', [GuruController::class, 'kegiatanTambahan'])->name('kegiatan-tambahan');
     Route::post('/kegiatan-tambahan', [GuruController::class, 'simpanKegiatanTambahan'])->name('kegiatan-tambahan.simpan');
+    Route::get('/raport/{siswa}/cetak', [GuruController::class, 'cetakRaportSiswa'])->name('raport.cetak');
     Route::get('/catatan-walikelas', [GuruController::class, 'catatan'])->name('catatan');
     Route::post('/catatan-walikelas', [GuruController::class, 'simpanCatatan'])->name('catatan.simpan');
     Route::get('/data-siswa', [GuruController::class, 'dataSiswa'])->name('data-siswa');
