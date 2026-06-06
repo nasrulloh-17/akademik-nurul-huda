@@ -27,6 +27,7 @@
                 <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
                 <a class="{{ request()->routeIs('admin.slider') ? 'active' : '' }}" href="{{ route('admin.slider') }}">Slider</a>
                 <a class="{{ request()->routeIs('admin.berita') ? 'active' : '' }}" href="{{ route('admin.berita') }}">Berita</a>
+                <a class="{{ request()->routeIs('admin.prestasi') ? 'active' : '' }}" href="{{ route('admin.prestasi') }}">Prestasi</a>
                 <a class="{{ request()->routeIs('admin.informasi') ? 'active' : '' }}" href="{{ route('admin.informasi') }}">Informasi Sekolah</a>
                 <a class="{{ request()->routeIs('admin.guru') ? 'active' : '' }}" href="{{ route('admin.guru') }}">Guru</a>
                 <a class="{{ request()->routeIs('admin.siswa') ? 'active' : '' }}" href="{{ route('admin.siswa') }}">Siswa</a>

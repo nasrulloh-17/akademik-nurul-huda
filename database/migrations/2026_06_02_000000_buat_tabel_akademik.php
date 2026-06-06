@@ -85,6 +85,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('prestasi', function (Blueprint $table) {
+            $table->id();
+            $table->string('judul');
+            $table->text('keterangan')->nullable();
+            $table->string('foto')->nullable();
+            $table->timestamps();
+        });
+
         Schema::create('mata_pelajaran', function (Blueprint $table) {
             $table->id();
             $table->foreignId('guru_id')->nullable()->constrained('guru')->nullOnDelete();
@@ -126,7 +134,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['tagihan', 'catatan_walikelas', 'nilai', 'mata_pelajaran', 'informasi_sekolah', 'berita', 'slider', 'siswa', 'guru_role', 'guru', 'kelas', 'pengguna'] as $table) {
+        foreach (['tagihan', 'catatan_walikelas', 'nilai', 'mata_pelajaran', 'prestasi', 'informasi_sekolah', 'berita', 'slider', 'siswa', 'guru_role', 'guru', 'kelas', 'pengguna'] as $table) {
             Schema::dropIfExists($table);
         }
     }

@@ -364,6 +364,89 @@
         color: #66827f;
     }
 
+    .prestasi-carousel {
+        position: relative;
+        max-width: 1180px;
+        margin: 28px auto 0;
+    }
+
+    .prestasi-window {
+        overflow: hidden;
+    }
+
+    .prestasi-track {
+        display: flex;
+        gap: 14px;
+        transition: transform .45s ease;
+    }
+
+    .prestasi-card {
+        flex: 0 0 calc((100% - 70px) / 6);
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--garis);
+        border-radius: 10px;
+        background: white;
+        text-align: left;
+        box-shadow: 0 14px 34px rgba(0, 71, 76, .08);
+    }
+
+    .prestasi-img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        display: block;
+        background: var(--muda);
+    }
+
+    .prestasi-body {
+        padding: 12px;
+    }
+
+    .prestasi-body h3 {
+        margin: 0 0 8px;
+        color: var(--gelap);
+        font-size: 15px;
+        line-height: 1.35;
+    }
+
+    .prestasi-body p {
+        margin: 0;
+        color: #66827f;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    .prestasi-controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .prestasi-control {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #007979, #0fbea8);
+        color: white;
+        font-size: 22px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .prestasi-control:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 26px rgba(0, 71, 76, .22);
+    }
+
+    .prestasi-control:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+    }
+
     .bantuan {
         padding: 54px 7vw;
         text-align: center;
@@ -489,6 +572,10 @@
         .jenjang-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+
+        .prestasi-card {
+            flex-basis: calc((100% - 28px) / 3);
+        }
     }
 
     @media (max-width: 850px) {
@@ -532,6 +619,16 @@
 
         .jenjang-grid {
             grid-template-columns: 1fr;
+        }
+
+        .prestasi-card {
+            flex-basis: calc((100% - 14px) / 2);
+        }
+    }
+
+    @media (max-width: 560px) {
+        .prestasi-card {
+            flex-basis: 100%;
         }
     }
 </style>
@@ -638,7 +735,7 @@
         <div class="jenjang-card">
             <img class="jenjang-logo-img" src="{{ asset('images/jenjang/6.svg') }}" alt="Logo PONDOK Nurul Huda">
             <h4>PP Nurul Huda Munjuk</h4>
-            <p>Pendidikan usia dini dengan suasana belajar yang aman, ceria, dan islami.</p>
+            <p>Membentuk santri yang bertaqwa, berakhlak mulia, dan siap menghadapi tantangan masa depan.</p>
         </div>
 
         <div class="jenjang-card">
@@ -670,6 +767,38 @@
             <h4>MADIN Nurul Huda</h4>
             <p>Pembinaan keagamaan, adab, dan kehidupan santri dalam lingkungan pesantren.</p>
         </div>
+    </div>
+</section>
+
+<section class="section" id="prestasi">
+    <h2>Prestasi</h2>
+
+    <div class="prestasi-carousel" data-prestasi-carousel>
+        <div class="prestasi-window">
+            <div class="prestasi-track" data-prestasi-track>
+                @forelse($prestasi as $item)
+                    <article class="prestasi-card">
+                        @if($item->foto)
+                            <img class="prestasi-img" src="{{ asset($item->foto) }}" alt="{{ $item->judul }}">
+                        @endif
+
+                        <div class="prestasi-body">
+                            <h3>{{ $item->judul }}</h3>
+                            <p>{{ \Illuminate\Support\Str::limit($item->keterangan, 90) }}</p>
+                        </div>
+                    </article>
+                @empty
+                    <div class="clean-item">Prestasi akan tampil setelah diisi admin.</div>
+                @endforelse
+            </div>
+        </div>
+
+        @if($prestasi->count() > 6)
+            <div class="prestasi-controls">
+                <button class="prestasi-control" type="button" data-prestasi-prev aria-label="Prestasi sebelumnya">&lsaquo;</button>
+                <button class="prestasi-control" type="button" data-prestasi-next aria-label="Prestasi berikutnya">&rsaquo;</button>
+            </div>
+        @endif
     </div>
 </section>
 
@@ -851,6 +980,58 @@
 
         window.addEventListener('resize', updateNews);
         updateNews();
+    });
+
+    document.querySelectorAll('[data-prestasi-carousel]').forEach((carousel) => {
+        const track = carousel.querySelector('[data-prestasi-track]');
+        const items = Array.from(track.children);
+        const prev = carousel.querySelector('[data-prestasi-prev]');
+        const next = carousel.querySelector('[data-prestasi-next]');
+        let index = 0;
+
+        if (! prev || ! next || items.length <= 6) {
+            return;
+        }
+
+        const visibleItems = () => {
+            if (window.matchMedia('(max-width: 560px)').matches) {
+                return 1;
+            }
+
+            if (window.matchMedia('(max-width: 850px)').matches) {
+                return 2;
+            }
+
+            if (window.matchMedia('(max-width: 980px)').matches) {
+                return 3;
+            }
+
+            return 6;
+        };
+
+        const updatePrestasi = () => {
+            const itemWidth = items[0].getBoundingClientRect().width;
+            const gap = parseFloat(getComputedStyle(track).gap) || 0;
+            const maxIndex = Math.max(0, items.length - visibleItems());
+
+            index = Math.min(index, maxIndex);
+            track.style.transform = `translateX(-${index * (itemWidth + gap)}px)`;
+            prev.disabled = index === 0;
+            next.disabled = index === maxIndex;
+        };
+
+        prev.addEventListener('click', () => {
+            index -= 1;
+            updatePrestasi();
+        });
+
+        next.addEventListener('click', () => {
+            index += 1;
+            updatePrestasi();
+        });
+
+        window.addEventListener('resize', updatePrestasi);
+        updatePrestasi();
     });
 </script>
 @endsection

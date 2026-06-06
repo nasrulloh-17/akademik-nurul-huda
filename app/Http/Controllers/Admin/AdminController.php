@@ -96,6 +96,34 @@ class AdminController extends Controller
         return back()->with('sukses', 'Berita dihapus.');
     }
 
+    public function prestasi()
+    {
+        $this->jaga();
+        return view('admin.prestasi', ['prestasi' => DB::table('prestasi')->latest()->get()]);
+    }
+
+    public function simpanPrestasi(Request $request)
+    {
+        $this->jaga();
+        $data = $request->validate([
+            'judul' => 'required',
+            'keterangan' => 'nullable',
+            'foto' => 'nullable|image',
+        ]);
+        $data['foto'] = $this->unggah($request, 'foto', 'prestasi');
+        $data['created_at'] = now();
+        $data['updated_at'] = now();
+        DB::table('prestasi')->insert($data);
+        return back()->with('sukses', 'Prestasi berhasil disimpan.');
+    }
+
+    public function hapusPrestasi(int $id)
+    {
+        $this->jaga();
+        DB::table('prestasi')->where('id', $id)->delete();
+        return back()->with('sukses', 'Prestasi dihapus.');
+    }
+
     public function informasi()
     {
         $this->jaga();
