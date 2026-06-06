@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\DB;
 
 class GuruController extends Controller
 {
+    private array $kegiatanTambahan = [
+        'Ekstrakurikuler' => ['Pramuka', 'Pidato', 'Khot', 'Robotika'],
+        'Pengembangan Diri' => ['Sholat Dluha', 'Sholat Rawatib', 'Murajaah'],
+        'Kepribadian' => ['Kedisiplinan', 'Kebersihan', 'Kerapian'],
+        'Kehadiran' => ['Sakit', 'Izin', 'Tanpa Keterangan'],
+    ];
+
+    private array $nilaiKegiatanTambahan = [
+        'Ekstrakurikuler' => ['Aktif', 'Mengikuti', 'Tidak Mengikuti'],
+        'Pengembangan Diri' => ['Baik', 'Cukup', 'Kurang'],
+        'Kepribadian' => ['Baik', 'Cukup', 'Kurang'],
+    ];
+
     private function tahunAjaranAktif()
     {
         $tahunAjaran = DB::table('tahun_ajaran')->where('aktif', true)->first();
@@ -30,6 +43,17 @@ class GuruController extends Controller
     {
         abort_unless(session('jenis_pengguna') === 'guru', 403);
         return DB::table('guru')->where('pengguna_id', session('pengguna_id'))->first();
+    }
+
+    private function kelasWali(int $guruId)
+    {
+        return DB::table('guru_role')
+            ->join('kelas', 'kelas.id', '=', 'guru_role.kelas_id')
+            ->where('guru_role.guru_id', $guruId)
+            ->where('guru_role.role', 'wali kelas')
+            ->select('kelas.*')
+            ->orderBy('kelas.nama_kelas')
+            ->get();
     }
 
     public function dashboard()
@@ -168,6 +192,101 @@ class GuruController extends Controller
         }
 
         return back()->with('sukses', 'Catatan atau tagihan berhasil disimpan.');
+    }
+
+    public function kegiatanTambahan(Request $request)
+    {
+        $guru = $this->guru();
+        $kelasWali = $this->kelasWali($guru->id);
+
+        abort_if($kelasWali->isEmpty(), 403, 'Anda belum terdaftar sebagai wali kelas.');
+
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $kelasAktif = $request->integer('kelas_id') ?: $kelasWali->first()->id;
+
+        abort_unless($kelasWali->contains('id', $kelasAktif), 403);
+
+        $siswa = DB::table('siswa')
+            ->where('kelas_id', $kelasAktif)
+            ->where('status', 'aktif')
+            ->orderBy('nama_siswa')
+            ->get();
+
+        $nilai = DB::table('nilai_kegiatan_tambahan')
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->where('kelas_id', $kelasAktif)
+            ->get()
+            ->keyBy(fn ($item) => $item->siswa_id.'|'.$item->kategori.'|'.$item->kegiatan);
+
+        return view('guru.kegiatan-tambahan', [
+            'kelasWali' => $kelasWali,
+            'kelasAktif' => $kelasAktif,
+            'tahunAjaran' => $tahunAjaran,
+            'siswa' => $siswa,
+            'nilai' => $nilai,
+            'kegiatanTambahan' => $this->kegiatanTambahan,
+            'nilaiKegiatanTambahan' => $this->nilaiKegiatanTambahan,
+        ]);
+    }
+
+    public function simpanKegiatanTambahan(Request $request)
+    {
+        $guru = $this->guru();
+        $kelasWali = $this->kelasWali($guru->id);
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $kelasId = $request->integer('kelas_id');
+
+        abort_unless($kelasWali->contains('id', $kelasId), 403);
+
+        $siswaKelas = DB::table('siswa')
+            ->where('kelas_id', $kelasId)
+            ->where('status', 'aktif')
+            ->pluck('id')
+            ->toArray();
+
+        foreach ($request->input('nilai', []) as $siswaId => $kategoriList) {
+            if (! in_array((int) $siswaId, $siswaKelas, true)) {
+                continue;
+            }
+
+            foreach ($kategoriList as $kategori => $kegiatanList) {
+                if (! isset($this->kegiatanTambahan[$kategori])) {
+                    continue;
+                }
+
+                foreach ($kegiatanList as $kegiatan => $isi) {
+                    if (! in_array($kegiatan, $this->kegiatanTambahan[$kategori], true)) {
+                        continue;
+                    }
+
+                    $isi = trim((string) $isi);
+
+                    if ($kategori === 'Kehadiran') {
+                        $isi = $isi === '' ? '0' : (string) max(0, (int) $isi);
+                    } elseif (! in_array($isi, $this->nilaiKegiatanTambahan[$kategori] ?? [], true)) {
+                        $isi = null;
+                    }
+
+                    DB::table('nilai_kegiatan_tambahan')->updateOrInsert(
+                        [
+                            'siswa_id' => $siswaId,
+                            'tahun_ajaran_id' => $tahunAjaran->id,
+                            'kategori' => $kategori,
+                            'kegiatan' => $kegiatan,
+                        ],
+                        [
+                            'guru_id' => $guru->id,
+                            'kelas_id' => $kelasId,
+                            'nilai' => $isi,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                }
+            }
+        }
+
+        return back()->with('sukses', 'Nilai kegiatan tambahan berhasil disimpan.');
     }
 
     public function dataSiswa()

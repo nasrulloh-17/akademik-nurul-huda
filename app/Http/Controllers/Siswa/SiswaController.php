@@ -69,9 +69,40 @@ class SiswaController extends Controller
     private function dataRaport(): array
     {
         $siswa = $this->siswa();
+        $nilai = DB::table('nilai')
+            ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')
+            ->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')
+            ->leftJoin('tahun_ajaran', 'tahun_ajaran.id', '=', 'nilai.tahun_ajaran_id')
+            ->where('nilai.siswa_id', $siswa->id)
+            ->select(
+                'nilai.*',
+                'mata_pelajaran.nama_mata_pelajaran',
+                'guru.nama_guru',
+                'tahun_ajaran.nama_tahun_ajaran'
+            )
+            ->orderByDesc('tahun_ajaran.id')
+            ->orderBy('mata_pelajaran.nama_mata_pelajaran')
+            ->get();
+        $kegiatanTambahan = DB::table('nilai_kegiatan_tambahan')
+            ->leftJoin('tahun_ajaran', 'tahun_ajaran.id', '=', 'nilai_kegiatan_tambahan.tahun_ajaran_id')
+            ->where('nilai_kegiatan_tambahan.siswa_id', $siswa->id)
+            ->select('nilai_kegiatan_tambahan.*', 'tahun_ajaran.nama_tahun_ajaran')
+            ->orderByDesc('tahun_ajaran.id')
+            ->orderBy('kategori')
+            ->orderBy('kegiatan')
+            ->get();
+        $nilaiPerTahun = $nilai->groupBy(fn ($item) => $item->nama_tahun_ajaran ?? 'Tanpa Tahun Ajaran');
+        $kegiatanPerTahun = $kegiatanTambahan
+            ->groupBy(fn ($item) => $item->nama_tahun_ajaran ?? 'Tanpa Tahun Ajaran')
+            ->map(fn ($items) => $items->groupBy('kategori'));
+
         return [
             'siswa' => DB::table('siswa')->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')->select('siswa.*', 'kelas.nama_kelas')->where('siswa.id', $siswa->id)->first(),
-            'nilai' => DB::table('nilai')->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')->where('nilai.siswa_id', $siswa->id)->select('nilai.*', 'mata_pelajaran.nama_mata_pelajaran', 'guru.nama_guru')->get(),
+            'nilai' => $nilai,
+            'nilaiPerTahun' => $nilaiPerTahun,
+            'kegiatanTambahan' => $kegiatanTambahan,
+            'kegiatanPerTahun' => $kegiatanPerTahun,
+            'tahunRaport' => $nilaiPerTahun->keys()->merge($kegiatanPerTahun->keys())->unique(),
             'catatan' => DB::table('catatan_walikelas')->where('siswa_id', $siswa->id)->latest()->get(),
         ];
     }

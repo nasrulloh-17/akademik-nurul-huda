@@ -47,6 +47,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('guru_id')->constrained('guru')->cascadeOnDelete();
             $table->enum('role', ['pengampu mata pelajaran', 'wali kelas', 'staff']);
+            $table->foreignId('kelas_id')->nullable()->constrained('kelas')->nullOnDelete();
+            $table->string('staff_jenis')->nullable();
             $table->timestamps();
         });
 
@@ -148,6 +150,22 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('nilai_kegiatan_tambahan', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('siswa_id')->constrained('siswa')->cascadeOnDelete();
+            $table->foreignId('guru_id')->nullable()->constrained('guru')->nullOnDelete();
+            $table->foreignId('kelas_id')->nullable()->constrained('kelas')->nullOnDelete();
+            $table->foreignId('tahun_ajaran_id')->constrained('tahun_ajaran')->cascadeOnDelete();
+            $table->string('kategori');
+            $table->string('kegiatan');
+            $table->string('nilai')->nullable();
+            $table->timestamps();
+            $table->unique(
+                ['siswa_id', 'tahun_ajaran_id', 'kategori', 'kegiatan'],
+                'nilai_kegiatan_siswa_tahun_kategori_unique'
+            );
+        });
+
         Schema::create('tagihan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('siswa_id')->constrained('siswa')->cascadeOnDelete();
@@ -161,7 +179,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        foreach (['tagihan', 'catatan_walikelas', 'nilai', 'mata_pelajaran', 'galeri', 'prestasi', 'informasi_sekolah', 'berita', 'slider', 'riwayat_kelas', 'siswa', 'guru_role', 'guru', 'kelas', 'pengguna', 'tahun_ajaran'] as $table) {
+        foreach (['tagihan', 'nilai_kegiatan_tambahan', 'catatan_walikelas', 'nilai', 'mata_pelajaran', 'galeri', 'prestasi', 'informasi_sekolah', 'berita', 'slider', 'riwayat_kelas', 'siswa', 'guru_role', 'guru', 'kelas', 'pengguna', 'tahun_ajaran'] as $table) {
             Schema::dropIfExists($table);
         }
     }

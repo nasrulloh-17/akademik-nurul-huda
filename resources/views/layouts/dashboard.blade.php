@@ -38,6 +38,7 @@
             @elseif($jenisPengguna === 'guru')
                 <a class="{{ request()->routeIs('guru.dashboard') ? 'active' : '' }}" href="{{ route('guru.dashboard') }}">Dashboard</a>
                 <a class="{{ request()->routeIs('guru.nilai') ? 'active' : '' }}" href="{{ route('guru.nilai') }}">Input Nilai</a>
+                <a class="{{ request()->routeIs('guru.kegiatan-tambahan') ? 'active' : '' }}" href="{{ route('guru.kegiatan-tambahan') }}">Kegiatan Tambahan</a>
                 <a class="{{ request()->routeIs('guru.catatan') ? 'active' : '' }}" href="{{ route('guru.catatan') }}">Catatan Walikelas</a>
                 <a class="{{ request()->routeIs('guru.data-siswa') ? 'active' : '' }}" href="{{ route('guru.data-siswa') }}">Data Siswa</a>
             @else

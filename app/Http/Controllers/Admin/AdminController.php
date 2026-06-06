@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -197,7 +198,12 @@ class AdminController extends Controller
         $this->jaga();
         return view('admin.guru', [
             'guru' => DB::table('guru')->join('pengguna', 'pengguna.id', '=', 'guru.pengguna_id')->select('guru.*', 'pengguna.identitas')->latest('guru.id')->get(),
-            'roles' => DB::table('guru_role')->get()->groupBy('guru_id'),
+            'roles' => DB::table('guru_role')
+                ->leftJoin('kelas', 'kelas.id', '=', 'guru_role.kelas_id')
+                ->select('guru_role.*', 'kelas.nama_kelas')
+                ->get()
+                ->groupBy('guru_id'),
+            'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
         ]);
     }
 
@@ -209,9 +215,22 @@ class AdminController extends Controller
             'nama_guru' => 'required',
             'kata_sandi' => 'required',
             'role' => 'array',
+            'role.*' => 'in:pengampu mata pelajaran,wali kelas,staff',
+            'wali_kelas_id' => 'nullable|exists:kelas,id',
+            'staff_jenis' => 'nullable|in:staff TU,staff keuangan',
             'telepon' => 'nullable',
             'alamat' => 'nullable',
         ]);
+
+        $roles = $data['role'] ?? [];
+
+        if (in_array('wali kelas', $roles, true) && empty($data['wali_kelas_id'])) {
+            return back()->withInput()->withErrors(['wali_kelas_id' => 'Pilih kelas untuk wali kelas.']);
+        }
+
+        if (in_array('staff', $roles, true) && empty($data['staff_jenis'])) {
+            return back()->withInput()->withErrors(['staff_jenis' => 'Pilih jenis staff.']);
+        }
 
         DB::transaction(function () use ($data) {
             $penggunaId = DB::table('pengguna')->insertGetId([
@@ -232,7 +251,14 @@ class AdminController extends Controller
                 'updated_at' => now(),
             ]);
             foreach ($data['role'] ?? [] as $role) {
-                DB::table('guru_role')->insert(['guru_id' => $guruId, 'role' => $role, 'created_at' => now(), 'updated_at' => now()]);
+                DB::table('guru_role')->insert([
+                    'guru_id' => $guruId,
+                    'role' => $role,
+                    'kelas_id' => $role === 'wali kelas' ? $data['wali_kelas_id'] : null,
+                    'staff_jenis' => $role === 'staff' ? $data['staff_jenis'] : null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         });
 
@@ -245,6 +271,70 @@ class AdminController extends Controller
         $penggunaId = DB::table('guru')->where('id', $id)->value('pengguna_id');
         DB::table('pengguna')->where('id', $penggunaId)->delete();
         return back()->with('sukses', 'Guru dihapus.');
+    }
+
+    public function ubahGuru(Request $request, int $id)
+    {
+        $this->jaga();
+        $guru = DB::table('guru')->where('id', $id)->first();
+
+        abort_unless($guru, 404);
+
+        $data = $request->validate([
+            'id_guru' => [
+                'required',
+                Rule::unique('guru', 'id_guru')->ignore($id),
+                Rule::unique('pengguna', 'identitas')->ignore($guru->pengguna_id),
+            ],
+            'nama_guru' => 'required',
+            'role' => 'array',
+            'role.*' => 'in:pengampu mata pelajaran,wali kelas,staff',
+            'wali_kelas_id' => 'nullable|exists:kelas,id',
+            'staff_jenis' => 'nullable|in:staff TU,staff keuangan',
+            'telepon' => 'nullable',
+            'alamat' => 'nullable',
+        ]);
+
+        $roles = $data['role'] ?? [];
+
+        if (in_array('wali kelas', $roles, true) && empty($data['wali_kelas_id'])) {
+            return back()->withInput()->withErrors(['wali_kelas_id' => 'Pilih kelas untuk wali kelas.']);
+        }
+
+        if (in_array('staff', $roles, true) && empty($data['staff_jenis'])) {
+            return back()->withInput()->withErrors(['staff_jenis' => 'Pilih jenis staff.']);
+        }
+
+        DB::transaction(function () use ($data, $guru, $id) {
+            DB::table('pengguna')->where('id', $guru->pengguna_id)->update([
+                'nama' => $data['nama_guru'],
+                'identitas' => $data['id_guru'],
+                'updated_at' => now(),
+            ]);
+
+            DB::table('guru')->where('id', $id)->update([
+                'id_guru' => $data['id_guru'],
+                'nama_guru' => $data['nama_guru'],
+                'telepon' => $data['telepon'] ?? null,
+                'alamat' => $data['alamat'] ?? null,
+                'updated_at' => now(),
+            ]);
+
+            DB::table('guru_role')->where('guru_id', $id)->delete();
+
+            foreach ($data['role'] ?? [] as $role) {
+                DB::table('guru_role')->insert([
+                    'guru_id' => $id,
+                    'role' => $role,
+                    'kelas_id' => $role === 'wali kelas' ? $data['wali_kelas_id'] : null,
+                    'staff_jenis' => $role === 'staff' ? $data['staff_jenis'] : null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        });
+
+        return back()->with('sukses', 'Data guru berhasil diubah.');
     }
 
     public function ubahPasswordGuru(Request $request, int $id)

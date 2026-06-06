@@ -10,29 +10,63 @@
 <div class="card">
     <h3>{{ $siswa->nama_siswa }} - {{ $siswa->nama_kelas }}</h3>
 
-    <table>
-        <tr>
-            <th>Mata Pelajaran</th>
-            <th>Guru</th>
-            <th>Tugas</th>
-            <th>UTS</th>
-            <th>UAS</th>
-            <th>Rata-rata</th>
-            <th>Catatan Guru</th>
-        </tr>
+    @forelse($tahunRaport as $tahun)
+        @php($nilaiTahun = $nilaiPerTahun[$tahun] ?? collect())
 
-        @foreach($nilai as $n)
-            <tr>
-                <td>{{ $n->nama_mata_pelajaran }}</td>
-                <td>{{ $n->nama_guru }}</td>
-                <td>{{ $n->nilai_tugas }}</td>
-                <td>{{ $n->nilai_uts }}</td>
-                <td>{{ $n->nilai_uas }}</td>
-                <td>{{ number_format(($n->nilai_tugas + $n->nilai_uts + $n->nilai_uas) / 3, 2) }}</td>
-                <td>{{ $n->catatan_guru }}</td>
-            </tr>
-        @endforeach
-    </table>
+        <h4>Tahun Ajaran {{ $tahun }}</h4>
+
+        @if($nilaiTahun->isNotEmpty())
+            <table style="margin-bottom:18px">
+                <tr>
+                    <th>Mata Pelajaran</th>
+                    <th>Guru</th>
+                    <th>Tugas</th>
+                    <th>UTS</th>
+                    <th>UAS</th>
+                    <th>Rata-rata</th>
+                    <th>Catatan Guru</th>
+                </tr>
+
+                @foreach($nilaiTahun as $n)
+                    <tr>
+                        <td>{{ $n->nama_mata_pelajaran }}</td>
+                        <td>{{ $n->nama_guru }}</td>
+                        <td>{{ $n->nilai_tugas }}</td>
+                        <td>{{ $n->nilai_uts }}</td>
+                        <td>{{ $n->nilai_uas }}</td>
+                        <td>{{ number_format(($n->nilai_tugas + $n->nilai_uts + $n->nilai_uas) / 3, 2) }}</td>
+                        <td>{{ $n->catatan_guru }}</td>
+                    </tr>
+                @endforeach
+            </table>
+        @else
+            <p class="muted">Belum ada nilai mata pelajaran pada tahun ajaran ini.</p>
+        @endif
+
+        @if(isset($kegiatanPerTahun[$tahun]))
+            <h4>Kegiatan Tambahan Tahun Ajaran {{ $tahun }}</h4>
+
+            @foreach($kegiatanPerTahun[$tahun] as $kategori => $kegiatanList)
+                <h5>{{ $kategori }}</h5>
+
+                <table style="margin-bottom:16px">
+                    <tr>
+                        <th>Kegiatan</th>
+                        <th>Nilai</th>
+                    </tr>
+
+                    @foreach($kegiatanList as $kegiatan)
+                        <tr>
+                            <td>{{ $kegiatan->kegiatan }}</td>
+                            <td>{{ $kegiatan->nilai }}</td>
+                        </tr>
+                    @endforeach
+                </table>
+            @endforeach
+        @endif
+    @empty
+        <p>Belum ada nilai yang tersimpan.</p>
+    @endforelse
 </div>
 
 <div class="card">

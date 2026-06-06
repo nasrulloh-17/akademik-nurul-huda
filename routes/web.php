@@ -39,6 +39,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/informasi/{id}/hapus', [AdminController::class, 'hapusInformasi'])->name('informasi.hapus');
     Route::get('/guru', [AdminController::class, 'guru'])->name('guru');
     Route::post('/guru', [AdminController::class, 'simpanGuru'])->name('guru.simpan');
+    Route::post('/guru/{id}/ubah', [AdminController::class, 'ubahGuru'])->name('guru.ubah');
     Route::post('/guru/{id}/password', [AdminController::class, 'ubahPasswordGuru'])->name('guru.password');
     Route::post('/guru/{id}/hapus', [AdminController::class, 'hapusGuru'])->name('guru.hapus');
     Route::get('/siswa', [AdminController::class, 'siswa'])->name('siswa');
@@ -63,6 +64,8 @@ Route::prefix('guru')->name('guru.')->group(function () {
     Route::get('/nilai/{mapel?}', [GuruController::class, 'nilai'])->name('nilai');
     Route::post('/nilai/{mapel}', [GuruController::class, 'simpanNilai'])->name('nilai.simpan');
     Route::get('/nilai/{mapel}/cetak', [GuruController::class, 'cetakNilai'])->name('nilai.cetak');
+    Route::get('/kegiatan-tambahan', [GuruController::class, 'kegiatanTambahan'])->name('kegiatan-tambahan');
+    Route::post('/kegiatan-tambahan', [GuruController::class, 'simpanKegiatanTambahan'])->name('kegiatan-tambahan.simpan');
     Route::get('/catatan-walikelas', [GuruController::class, 'catatan'])->name('catatan');
     Route::post('/catatan-walikelas', [GuruController::class, 'simpanCatatan'])->name('catatan.simpan');
     Route::get('/data-siswa', [GuruController::class, 'dataSiswa'])->name('data-siswa');
