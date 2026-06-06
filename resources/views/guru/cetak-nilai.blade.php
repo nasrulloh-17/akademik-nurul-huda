@@ -134,10 +134,12 @@
         <div class="meta">
             <div>Mata Pelajaran</div>
             <div>: {{ $aktif->nama_mata_pelajaran }}</div>
+            <div>KKM</div>
+            <div>: {{ $aktif->kkm === null ? '-' : number_format($aktif->kkm, 0) }}</div>
             <div>Kelas</div>
             <div>: {{ $kelas->nama_kelas }}</div>
             <div>Tahun Ajaran</div>
-            <div>: {{ $tahunAjaran->nama_tahun_ajaran }}</div>
+            <div>: {{ $tahunAjaran->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaran->semester ?? 'ganjil') }}</div>
             <div>Guru</div>
             <div>: {{ $guru->nama_guru }}</div>
             <div>Tanggal Cetak</div>
@@ -163,16 +165,19 @@
                         $tugas = (float) ($n->nilai_tugas ?? 0);
                         $uts = (float) ($n->nilai_uts ?? 0);
                         $uas = (float) ($n->nilai_uas ?? 0);
-                        $akhir = ($tugas + $uts + $uas) / 3;
+                        $akhir = ($tugas * 0.3) + ($uts * 0.3) + ($uas * 0.4);
+                        $belumTuntas = $aktif->kkm !== null && $akhir < $aktif->kkm;
                     @endphp
 
                     <tr>
                         <td class="number">{{ $loop->iteration }}</td>
                         <td>{{ $murid->nama_siswa }}</td>
-                        <td class="score">{{ number_format($tugas, 2) }}</td>
-                        <td class="score">{{ number_format($uts, 2) }}</td>
-                        <td class="score">{{ number_format($uas, 2) }}</td>
-                        <td class="score">{{ number_format($akhir, 2) }}</td>
+                        <td class="score">{{ number_format($tugas, 0) }}</td>
+                        <td class="score">{{ number_format($uts, 0) }}</td>
+                        <td class="score">{{ number_format($uas, 0) }}</td>
+                        <td class="score" style="{{ $belumTuntas ? 'color:#dc3545;font-weight:700' : '' }}">
+                            {{ number_format($akhir, 0) }}
+                        </td>
                         <td>{{ $n->catatan_guru ?? '' }}</td>
                     </tr>
                 @empty

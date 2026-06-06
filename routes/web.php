@@ -65,6 +65,7 @@ Route::prefix('guru')->name('guru.')->group(function () {
     Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');
     Route::get('/nilai/{mapel?}', [GuruController::class, 'nilai'])->name('nilai');
     Route::post('/nilai/{mapel}', [GuruController::class, 'simpanNilai'])->name('nilai.simpan');
+    Route::post('/nilai/{mapel}/kkm', [GuruController::class, 'simpanKkm'])->name('nilai.kkm');
     Route::get('/nilai/{mapel}/cetak', [GuruController::class, 'cetakNilai'])->name('nilai.cetak');
     Route::get('/kegiatan-tambahan', [GuruController::class, 'kegiatanTambahan'])->name('kegiatan-tambahan');
     Route::post('/kegiatan-tambahan', [GuruController::class, 'simpanKegiatanTambahan'])->name('kegiatan-tambahan.simpan');

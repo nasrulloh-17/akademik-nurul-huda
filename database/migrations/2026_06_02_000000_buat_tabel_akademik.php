@@ -10,9 +10,11 @@ return new class extends Migration
     {
         Schema::create('tahun_ajaran', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_tahun_ajaran')->unique();
+            $table->string('nama_tahun_ajaran');
+            $table->enum('semester', ['ganjil', 'genap'])->default('ganjil');
             $table->boolean('aktif')->default(false);
             $table->timestamps();
+            $table->unique(['nama_tahun_ajaran', 'semester']);
         });
 
         Schema::create('pengguna', function (Blueprint $table) {
@@ -135,6 +137,7 @@ return new class extends Migration
             $table->foreignId('kelas_id')->nullable()->constrained('kelas')->nullOnDelete();
             $table->foreignId('guru_id')->nullable()->constrained('guru')->nullOnDelete();
             $table->string('nama_mata_pelajaran');
+            $table->decimal('kkm', 5, 2)->nullable();
             $table->text('keterangan')->nullable();
             $table->timestamps();
         });

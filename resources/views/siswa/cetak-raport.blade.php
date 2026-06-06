@@ -49,7 +49,7 @@
         <p>NIS: {{ $siswa->nis }}</p>
         <p>Kelas: {{ $siswa->nama_kelas }}</p>
         <p>
-            Peringkat Kelas Tahun Ajaran Aktif {{ $tahunAjaranAktif->nama_tahun_ajaran }}:
+            Peringkat Kelas Periode Aktif {{ $tahunAjaranAktif->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaranAktif->semester ?? 'ganjil') }}:
             {{ $peringkat ? $peringkat.' dari '.$jumlahSiswaKelas.' siswa' : 'Belum tersedia' }}
         </p>
     </div>
@@ -64,6 +64,7 @@
                 <tr>
                     <th>Mata Pelajaran</th>
                     <th>Guru</th>
+                    <th>KKM</th>
                     <th>Tugas</th>
                     <th>UTS</th>
                     <th>UAS</th>
@@ -72,13 +73,19 @@
                 </tr>
 
                 @foreach($nilaiTahun as $n)
+                    @php($nilaiAkhir = ($n->nilai_tugas * 0.3) + ($n->nilai_uts * 0.3) + ($n->nilai_uas * 0.4))
+                    @php($belumTuntas = $n->kkm !== null && $nilaiAkhir < $n->kkm)
+
                     <tr>
                         <td>{{ $n->nama_mata_pelajaran }}</td>
                         <td>{{ $n->nama_guru }}</td>
-                        <td>{{ $n->nilai_tugas }}</td>
-                        <td>{{ $n->nilai_uts }}</td>
-                        <td>{{ $n->nilai_uas }}</td>
-                        <td>{{ number_format(($n->nilai_tugas + $n->nilai_uts + $n->nilai_uas) / 3, 2) }}</td>
+                        <td>{{ $n->kkm === null ? '-' : number_format($n->kkm, 0) }}</td>
+                        <td>{{ number_format($n->nilai_tugas, 0) }}</td>
+                        <td>{{ number_format($n->nilai_uts, 0) }}</td>
+                        <td>{{ number_format($n->nilai_uas, 0) }}</td>
+                        <td style="{{ $belumTuntas ? 'color:#dc3545;font-weight:700' : '' }}">
+                            {{ number_format($nilaiAkhir, 0) }}
+                        </td>
                         <td>{{ $n->catatan_guru }}</td>
                     </tr>
                 @endforeach

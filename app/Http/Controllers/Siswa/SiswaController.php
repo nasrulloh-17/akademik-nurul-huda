@@ -19,6 +19,7 @@ class SiswaController extends Controller
 
         $id = DB::table('tahun_ajaran')->insertGetId([
             'nama_tahun_ajaran' => now()->month >= 7 ? now()->year.'/'.now()->addYear()->year : now()->subYear()->year.'/'.now()->year,
+            'semester' => now()->month >= 7 ? 'ganjil' : 'genap',
             'aktif' => true,
             'created_at' => now(),
             'updated_at' => now(),
@@ -96,8 +97,10 @@ class SiswaController extends Controller
             ->select(
                 'nilai.*',
                 'mata_pelajaran.nama_mata_pelajaran',
+                'mata_pelajaran.kkm',
                 'guru.nama_guru',
-                'tahun_ajaran.nama_tahun_ajaran'
+                'tahun_ajaran.nama_tahun_ajaran',
+                'tahun_ajaran.semester'
             )
             ->orderByDesc('tahun_ajaran.id')
             ->orderBy('mata_pelajaran.nama_mata_pelajaran')
@@ -105,14 +108,15 @@ class SiswaController extends Controller
         $kegiatanTambahan = DB::table('nilai_kegiatan_tambahan')
             ->leftJoin('tahun_ajaran', 'tahun_ajaran.id', '=', 'nilai_kegiatan_tambahan.tahun_ajaran_id')
             ->where('nilai_kegiatan_tambahan.siswa_id', $siswa->id)
-            ->select('nilai_kegiatan_tambahan.*', 'tahun_ajaran.nama_tahun_ajaran')
+            ->select('nilai_kegiatan_tambahan.*', 'tahun_ajaran.nama_tahun_ajaran', 'tahun_ajaran.semester')
             ->orderByDesc('tahun_ajaran.id')
             ->orderBy('kategori')
             ->orderBy('kegiatan')
             ->get();
-        $nilaiPerTahun = $nilai->groupBy(fn ($item) => $item->nama_tahun_ajaran ?? 'Tanpa Tahun Ajaran');
+        $labelPeriode = fn ($item) => trim(($item->nama_tahun_ajaran ?? 'Tanpa Tahun Ajaran').' - '.ucfirst($item->semester ?? 'ganjil'));
+        $nilaiPerTahun = $nilai->groupBy($labelPeriode);
         $kegiatanPerTahun = $kegiatanTambahan
-            ->groupBy(fn ($item) => $item->nama_tahun_ajaran ?? 'Tanpa Tahun Ajaran')
+            ->groupBy($labelPeriode)
             ->map(fn ($items) => $items->groupBy('kategori'));
         $peringkatKelas = DB::table('siswa')
             ->leftJoin('nilai', function ($join) use ($tahunAjaran) {
@@ -123,7 +127,7 @@ class SiswaController extends Controller
             ->where('siswa.status', 'aktif')
             ->select(
                 'siswa.id',
-                DB::raw('AVG((nilai.nilai_tugas + nilai.nilai_uts + nilai.nilai_uas) / 3) as rata_rata_raport')
+                DB::raw('AVG((nilai.nilai_tugas * 0.3) + (nilai.nilai_uts * 0.3) + (nilai.nilai_uas * 0.4)) as rata_rata_raport')
             )
             ->groupBy('siswa.id')
             ->get()

@@ -41,8 +41,42 @@
         @csrf
 
         <div class="card">
-            <h3>{{ $aktif->nama_mata_pelajaran }}</h3>
-            <p class="muted">Tahun ajaran aktif: {{ $tahunAjaran->nama_tahun_ajaran }}</p>
+            <div
+                style="display:grid;grid-template-columns:minmax(220px,1fr) minmax(180px,260px) auto;gap:12px;align-items:end;margin-bottom:12px"
+            >
+                <div>
+                    <h3 style="margin:0">{{ $aktif->nama_mata_pelajaran }}</h3>
+                    <p class="muted" style="margin-bottom:0">
+                        Tahun ajaran aktif:
+                        {{ $tahunAjaran->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaran->semester ?? 'ganjil') }}
+                    </p>
+                </div>
+
+                <label>
+                    Nilai KKM
+                    <input
+                        form="form-kkm"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        name="kkm"
+                        value="{{ $aktif->kkm }}"
+                        placeholder="Contoh: 75"
+                        required
+                    >
+                </label>
+
+                <button class="btn" form="form-kkm">Simpan KKM</button>
+            </div>
+
+            @if($aktif->kkm === null)
+                <div class="alert">Isi nilai KKM terlebih dahulu sebelum menginput nilai siswa.</div>
+            @endif
+
+            <p class="muted">
+                Nilai akhir dihitung otomatis: 30% Tugas + 30% UTS + 40% UAS.
+            </p>
 
             @unless($kelasAktif)
                 <p class="muted">Pilih kelas terlebih dahulu agar nilai yang dicetak sesuai kelas.</p>
@@ -73,6 +107,7 @@
                                 name="nilai[{{ $murid->id }}][nilai_tugas]"
                                 value="{{ $n->nilai_tugas ?? 0 }}"
                                 data-nilai-tugas
+                                @disabled($aktif->kkm === null)
                             >
                         </td>
                         <td>
@@ -81,6 +116,7 @@
                                 name="nilai[{{ $murid->id }}][nilai_uts]"
                                 value="{{ $n->nilai_uts ?? 0 }}"
                                 data-nilai-uts
+                                @disabled($aktif->kkm === null)
                             >
                         </td>
                         <td>
@@ -89,22 +125,31 @@
                                 name="nilai[{{ $murid->id }}][nilai_uas]"
                                 value="{{ $n->nilai_uas ?? 0 }}"
                                 data-nilai-uas
+                                @disabled($aktif->kkm === null)
                             >
                         </td>
                         <td>
-                            <input data-nilai-akhir readonly>
+                            <input data-nilai-akhir data-kkm="{{ $aktif->kkm }}" readonly>
                         </td>
                         <td>
-                            <input name="nilai[{{ $murid->id }}][catatan_guru]" value="{{ $n->catatan_guru ?? '' }}">
+                            <input
+                                name="nilai[{{ $murid->id }}][catatan_guru]"
+                                value="{{ $n->catatan_guru ?? '' }}"
+                                @disabled($aktif->kkm === null)
+                            >
                         </td>
                     </tr>
                 @endforeach
             </table>
 
             <p>
-                <button class="btn">Simpan Nilai</button>
+                <button class="btn" @disabled($aktif->kkm === null)>Simpan Nilai</button>
             </p>
         </div>
+    </form>
+
+    <form id="form-kkm" method="post" action="{{ route('guru.nilai.kkm', $aktif->id) }}">
+        @csrf
     </form>
 @endif
 
@@ -124,7 +169,12 @@
             const uts = parseFloat(nilaiUts.value) || 0;
             const uas = parseFloat(nilaiUas.value) || 0;
 
-            nilaiAkhir.value = ((tugas + uts + uas) / 3).toFixed(2);
+            const akhir = (tugas * 0.3) + (uts * 0.3) + (uas * 0.4);
+            const kkm = parseFloat(nilaiAkhir.dataset.kkm);
+
+            nilaiAkhir.value = akhir.toFixed(0);
+            nilaiAkhir.style.color = ! Number.isNaN(kkm) && akhir < kkm ? '#dc3545' : '';
+            nilaiAkhir.style.fontWeight = ! Number.isNaN(kkm) && akhir < kkm ? '700' : '';
         };
 
         nilaiTugas.addEventListener('input', hitungNilaiAkhir);

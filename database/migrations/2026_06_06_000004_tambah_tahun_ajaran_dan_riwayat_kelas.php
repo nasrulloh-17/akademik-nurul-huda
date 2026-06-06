@@ -12,9 +12,11 @@ return new class extends Migration
         if (! Schema::hasTable('tahun_ajaran')) {
             Schema::create('tahun_ajaran', function (Blueprint $table) {
                 $table->id();
-                $table->string('nama_tahun_ajaran')->unique();
+                $table->string('nama_tahun_ajaran');
+                $table->enum('semester', ['ganjil', 'genap'])->default('ganjil');
                 $table->boolean('aktif')->default(false);
                 $table->timestamps();
+                $table->unique(['nama_tahun_ajaran', 'semester']);
             });
         }
 
@@ -24,6 +26,7 @@ return new class extends Migration
         if (! $tahunAjaranId) {
             $tahunAjaranId = DB::table('tahun_ajaran')->insertGetId([
                 'nama_tahun_ajaran' => now()->month >= 7 ? now()->year.'/'.now()->copy()->addYear()->year : now()->copy()->subYear()->year.'/'.now()->year,
+                'semester' => now()->month >= 7 ? 'ganjil' : 'genap',
                 'aktif' => true,
                 'created_at' => now(),
                 'updated_at' => now(),

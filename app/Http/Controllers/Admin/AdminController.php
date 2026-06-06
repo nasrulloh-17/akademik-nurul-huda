@@ -26,6 +26,7 @@ class AdminController extends Controller
 
         $id = DB::table('tahun_ajaran')->insertGetId([
             'nama_tahun_ajaran' => now()->month >= 7 ? now()->year.'/'.now()->addYear()->year : now()->subYear()->year.'/'.now()->year,
+            'semester' => now()->month >= 7 ? 'ganjil' : 'genap',
             'aktif' => true,
             'created_at' => now(),
             'updated_at' => now(),
@@ -487,10 +488,17 @@ class AdminController extends Controller
     public function simpanTahunAjaran(Request $request)
     {
         $this->jaga();
-        $data = $request->validate(['nama_tahun_ajaran' => 'required|unique:tahun_ajaran,nama_tahun_ajaran']);
+        $data = $request->validate([
+            'nama_tahun_ajaran' => [
+                'required',
+                Rule::unique('tahun_ajaran', 'nama_tahun_ajaran')->where('semester', $request->semester),
+            ],
+            'semester' => 'required|in:ganjil,genap',
+        ]);
 
         DB::table('tahun_ajaran')->insert([
             'nama_tahun_ajaran' => $data['nama_tahun_ajaran'],
+            'semester' => $data['semester'],
             'aktif' => false,
             'created_at' => now(),
             'updated_at' => now(),

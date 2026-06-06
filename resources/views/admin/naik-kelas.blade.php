@@ -11,6 +11,11 @@
         @csrf
         <div class="form-grid">
             <input name="nama_tahun_ajaran" placeholder="Contoh: 2026/2027" required>
+            <select name="semester" required>
+                <option value="">Pilih Semester</option>
+                <option value="ganjil">Ganjil</option>
+                <option value="genap">Genap</option>
+            </select>
             <button class="btn">Tambah Tahun Ajaran</button>
         </div>
     </form>
@@ -18,6 +23,7 @@
     <table>
         <tr>
             <th>Tahun Ajaran</th>
+            <th>Semester</th>
             <th>Status</th>
             <th>Aksi</th>
         </tr>
@@ -25,6 +31,7 @@
         @foreach($tahunAjaran as $tahun)
             <tr>
                 <td>{{ $tahun->nama_tahun_ajaran }}</td>
+                <td>{{ ucfirst($tahun->semester ?? 'ganjil') }}</td>
                 <td>{{ $tahun->aktif ? 'Aktif' : '-' }}</td>
                 <td>
                     @unless($tahun->aktif)
@@ -65,7 +72,7 @@
                 <option value="">Tahun Ajaran Tujuan</option>
                 @foreach($tahunAjaran as $tahun)
                     <option value="{{ $tahun->id }}" @selected($tahunAktif && $tahunAktif->id === $tahun->id)>
-                        {{ $tahun->nama_tahun_ajaran }}
+                        {{ $tahun->nama_tahun_ajaran }} - {{ ucfirst($tahun->semester ?? 'ganjil') }}
                     </option>
                 @endforeach
             </select>
@@ -98,7 +105,7 @@
                 <option value="">Tahun Ajaran Lulus</option>
                 @foreach($tahunAjaran as $tahun)
                     <option value="{{ $tahun->id }}" @selected($tahunAktif && $tahunAktif->id === $tahun->id)>
-                        {{ $tahun->nama_tahun_ajaran }}
+                        {{ $tahun->nama_tahun_ajaran }} - {{ ucfirst($tahun->semester ?? 'ganjil') }}
                     </option>
                 @endforeach
             </select>

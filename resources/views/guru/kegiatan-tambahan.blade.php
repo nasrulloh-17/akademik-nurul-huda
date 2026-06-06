@@ -29,7 +29,10 @@
 
     <div class="card">
         <h3>Nilai Kegiatan Tambahan</h3>
-        <p class="muted">Tahun ajaran aktif: {{ $tahunAjaran->nama_tahun_ajaran }}</p>
+        <p class="muted">
+            Tahun ajaran aktif:
+            {{ $tahunAjaran->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaran->semester ?? 'ganjil') }}
+        </p>
 
         @if($siswa->isNotEmpty())
             <div style="overflow-x:auto;margin-bottom:24px">

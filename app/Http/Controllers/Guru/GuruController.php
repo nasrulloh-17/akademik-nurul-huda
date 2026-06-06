@@ -31,6 +31,7 @@ class GuruController extends Controller
 
         $id = DB::table('tahun_ajaran')->insertGetId([
             'nama_tahun_ajaran' => now()->month >= 7 ? now()->year.'/'.now()->addYear()->year : now()->subYear()->year.'/'.now()->year,
+            'semester' => now()->month >= 7 ? 'ganjil' : 'genap',
             'aktif' => true,
             'created_at' => now(),
             'updated_at' => now(),
@@ -96,7 +97,13 @@ class GuruController extends Controller
     {
         $guru = $this->guru();
         $tahunAjaran = $this->tahunAjaranAktif();
-        abort_unless(DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->exists(), 403);
+        $mataPelajaran = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
+
+        abort_unless($mataPelajaran, 403);
+
+        if ($mataPelajaran->kkm === null) {
+            return back()->withErrors(['kkm' => 'Isi nilai KKM terlebih dahulu sebelum menginput nilai siswa.']);
+        }
 
         foreach ($request->input('nilai', []) as $siswaId => $isi) {
             DB::table('nilai')->updateOrInsert(
@@ -113,6 +120,23 @@ class GuruController extends Controller
         }
 
         return back()->with('sukses', 'Nilai berhasil diperbarui.');
+    }
+
+    public function simpanKkm(Request $request, int $mapel)
+    {
+        $guru = $this->guru();
+        abort_unless(DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->exists(), 403);
+
+        $data = $request->validate([
+            'kkm' => 'required|numeric|min:0|max:100',
+        ]);
+
+        DB::table('mata_pelajaran')->where('id', $mapel)->update([
+            'kkm' => $data['kkm'],
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('sukses', 'Nilai KKM berhasil disimpan.');
     }
 
     public function cetakNilai(Request $request, int $mapel)
@@ -236,12 +260,16 @@ class GuruController extends Controller
         $tahunAjaran = $this->tahunAjaranAktif();
         $siswa = DB::table('siswa')
             ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
-            ->select('siswa.*', 'kelas.nama_kelas')
+            ->select('siswa.*', 'kelas.nama_kelas', 'kelas.tingkat')
             ->where('siswa.id', $siswaId)
             ->first();
 
         abort_unless($siswa, 404);
         abort_unless($kelasWali->contains('id', $siswa->kelas_id), 403);
+
+        $dataSekolah = DB::table('data_sekolah')->first();
+        $tingkat = (int) ($siswa->tingkat ?: preg_replace('/\D+/', '', (string) $siswa->nama_kelas));
+        $pakaiMts = $tingkat >= 7 && $tingkat <= 9;
 
         $nilai = DB::table('mata_pelajaran')
             ->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')
@@ -257,6 +285,7 @@ class GuruController extends Controller
             ->select(
                 'mata_pelajaran.id',
                 'mata_pelajaran.nama_mata_pelajaran',
+                'mata_pelajaran.kkm',
                 'guru.nama_guru',
                 'nilai.nilai_tugas',
                 'nilai.nilai_uts',
@@ -282,7 +311,7 @@ class GuruController extends Controller
             ->where('siswa.status', 'aktif')
             ->select(
                 'siswa.id',
-                DB::raw('AVG((nilai.nilai_tugas + nilai.nilai_uts + nilai.nilai_uas) / 3) as rata_rata_raport')
+                DB::raw('AVG((nilai.nilai_tugas * 0.3) + (nilai.nilai_uts * 0.3) + (nilai.nilai_uas * 0.4)) as rata_rata_raport')
             )
             ->groupBy('siswa.id')
             ->get()
@@ -302,6 +331,9 @@ class GuruController extends Controller
             'kegiatanTambahan' => $kegiatanTambahan,
             'peringkat' => $dataPeringkat && $dataPeringkat->rata_rata_raport !== null ? $peringkat + 1 : null,
             'jumlahSiswaKelas' => $peringkatKelas->count(),
+            'namaSekolah' => $pakaiMts ? "MTs Ma'arif 20" : 'SMA Nurul Huda',
+            'kepalaSekolah' => $pakaiMts ? ($dataSekolah->kepala_mts ?? null) : ($dataSekolah->kepala_sma ?? null),
+            'alamatSekolah' => $dataSekolah->alamat ?? null,
         ]);
     }
 
