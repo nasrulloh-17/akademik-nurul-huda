@@ -68,8 +68,8 @@
                 </form>
             </td>
             <td>
-                <details style="margin-bottom:10px">
-                    <summary class="btn alt" style="display:inline-block">Ubah Data</summary>
+                <details style="margin-bottom:5px">
+                    <summary class="btn alt" style="display:inline-block">Ubah</summary>
 
                     <form method="post" action="{{ route('admin.siswa.ubah', $item->id) }}" style="margin-top:12px;min-width:320px">
                         @csrf

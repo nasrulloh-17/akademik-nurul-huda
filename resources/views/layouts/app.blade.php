@@ -39,7 +39,8 @@
             background: linear-gradient(135deg, var(--hijau), var(--toska));
             color: white;
             padding: 10px 14px;
-            font-weight: 700;
+            font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
             transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
         }
@@ -99,6 +100,7 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 10px 28px rgba(15, 190, 168, .08);
+            font-size: 14px;
         }
 
         th,
