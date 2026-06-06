@@ -394,7 +394,8 @@ class AdminController extends Controller
         $this->jaga();
         $tahunAjaran = $this->tahunAjaranAktif();
         $data = $request->validate([
-            'nis' => 'required',
+            'nis' => 'required|unique:siswa,nis',
+            'nisn' => 'required|unique:siswa,nisn|unique:pengguna,identitas',
             'nama_siswa' => 'required',
             'kata_sandi' => 'required',
             'kelas_id' => 'nullable|exists:kelas,id',
@@ -406,7 +407,7 @@ class AdminController extends Controller
         DB::transaction(function () use ($data, $tahunAjaran) {
             $penggunaId = DB::table('pengguna')->insertGetId([
                 'nama' => $data['nama_siswa'],
-                'identitas' => $data['nis'],
+                'identitas' => $data['nisn'],
                 'kata_sandi' => Hash::make($data['kata_sandi']),
                 'jenis_pengguna' => 'siswa',
                 'created_at' => now(),
@@ -416,6 +417,7 @@ class AdminController extends Controller
                 'pengguna_id' => $penggunaId,
                 'kelas_id' => $data['kelas_id'] ?? null,
                 'nis' => $data['nis'],
+                'nisn' => $data['nisn'],
                 'nama_siswa' => $data['nama_siswa'],
                 'jenis_kelamin' => $data['jenis_kelamin'] ?? null,
                 'telepon' => $data['telepon'] ?? null,
@@ -445,6 +447,64 @@ class AdminController extends Controller
         $penggunaId = DB::table('siswa')->where('id', $id)->value('pengguna_id');
         DB::table('pengguna')->where('id', $penggunaId)->delete();
         return back()->with('sukses', 'Siswa dihapus.');
+    }
+
+    public function ubahSiswa(Request $request, int $id)
+    {
+        $this->jaga();
+        $siswa = DB::table('siswa')->where('id', $id)->first();
+
+        abort_unless($siswa, 404);
+
+        $data = $request->validate([
+            'nis' => [
+                'required',
+                Rule::unique('siswa', 'nis')->ignore($id),
+            ],
+            'nisn' => [
+                'required',
+                Rule::unique('siswa', 'nisn')->ignore($id),
+                Rule::unique('pengguna', 'identitas')->ignore($siswa->pengguna_id),
+            ],
+            'nama_siswa' => 'required',
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'jenis_kelamin' => 'nullable',
+            'telepon' => 'nullable',
+            'alamat' => 'nullable',
+            'status' => 'required|in:aktif,lulus',
+        ]);
+
+        $tahunAjaran = $this->tahunAjaranAktif();
+
+        DB::transaction(function () use ($data, $id, $siswa, $tahunAjaran) {
+            DB::table('pengguna')->where('id', $siswa->pengguna_id)->update([
+                'nama' => $data['nama_siswa'],
+                'identitas' => $data['nisn'],
+                'updated_at' => now(),
+            ]);
+
+            DB::table('siswa')->where('id', $id)->update([
+                'nis' => $data['nis'],
+                'nisn' => $data['nisn'],
+                'nama_siswa' => $data['nama_siswa'],
+                'kelas_id' => $data['kelas_id'] ?? null,
+                'jenis_kelamin' => $data['jenis_kelamin'] ?? null,
+                'telepon' => $data['telepon'] ?? null,
+                'alamat' => $data['alamat'] ?? null,
+                'status' => $data['status'],
+                'tanggal_lulus' => $data['status'] === 'lulus' ? ($siswa->tanggal_lulus ?: now()->toDateString()) : null,
+                'updated_at' => now(),
+            ]);
+
+            if (! empty($data['kelas_id'])) {
+                DB::table('riwayat_kelas')->updateOrInsert(
+                    ['siswa_id' => $id, 'tahun_ajaran_id' => $tahunAjaran->id],
+                    ['kelas_id' => $data['kelas_id'], 'created_at' => now(), 'updated_at' => now()]
+                );
+            }
+        });
+
+        return back()->with('sukses', 'Data siswa berhasil diubah.');
     }
 
     public function ubahPasswordSiswa(Request $request, int $id)

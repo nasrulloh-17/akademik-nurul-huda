@@ -20,7 +20,7 @@ class AuthController extends Controller
 
     public function formSiswa()
     {
-        return view('auth.login', ['jenis' => 'siswa', 'judul' => 'Login Siswa', 'label' => 'NIS Siswa']);
+        return view('auth.login', ['jenis' => 'siswa', 'judul' => 'Login Siswa', 'label' => 'NISN Siswa']);
     }
 
     public function loginAdmin(Request $request)

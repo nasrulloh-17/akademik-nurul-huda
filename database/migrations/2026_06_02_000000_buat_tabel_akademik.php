@@ -59,6 +59,7 @@ return new class extends Migration
             $table->foreignId('pengguna_id')->constrained('pengguna')->cascadeOnDelete();
             $table->foreignId('kelas_id')->nullable()->constrained('kelas')->nullOnDelete();
             $table->string('nis')->unique();
+            $table->string('nisn')->unique();
             $table->string('nama_siswa');
             $table->string('jenis_kelamin')->nullable();
             $table->string('tempat_lahir')->nullable();

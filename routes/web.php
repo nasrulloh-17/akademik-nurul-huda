@@ -46,6 +46,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/guru/{id}/hapus', [AdminController::class, 'hapusGuru'])->name('guru.hapus');
     Route::get('/siswa', [AdminController::class, 'siswa'])->name('siswa');
     Route::post('/siswa', [AdminController::class, 'simpanSiswa'])->name('siswa.simpan');
+    Route::post('/siswa/{id}/ubah', [AdminController::class, 'ubahSiswa'])->name('siswa.ubah');
     Route::post('/siswa/{id}/password', [AdminController::class, 'ubahPasswordSiswa'])->name('siswa.password');
     Route::post('/siswa/{id}/hapus', [AdminController::class, 'hapusSiswa'])->name('siswa.hapus');
     Route::get('/kelas', [AdminController::class, 'kelas'])->name('kelas');
