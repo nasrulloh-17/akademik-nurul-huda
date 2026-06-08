@@ -89,6 +89,7 @@ class AuthController extends Controller
             'pengguna_id' => $pengguna->id,
             'jenis_pengguna' => $pengguna->jenis_pengguna,
             'nama_pengguna' => $pengguna->nama,
+            'identitas_pengguna' => $pengguna->identitas,
         ]);
 
         return redirect()->route($tujuan);

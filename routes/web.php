@@ -64,6 +64,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('guru')->name('guru.')->group(function () {
     Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');
+    Route::get('/biodata', [GuruController::class, 'biodata'])->name('biodata');
+    Route::post('/biodata', [GuruController::class, 'simpanBiodata'])->name('biodata.simpan');
     Route::get('/nilai/{mapel?}', [GuruController::class, 'nilai'])->name('nilai');
     Route::post('/nilai/{mapel}', [GuruController::class, 'simpanNilai'])->name('nilai.simpan');
     Route::post('/nilai/{mapel}/kkm', [GuruController::class, 'simpanKkm'])->name('nilai.kkm');

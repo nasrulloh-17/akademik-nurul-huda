@@ -46,6 +46,11 @@ class GuruController extends Controller
         return DB::table('guru')->where('pengguna_id', session('pengguna_id'))->first();
     }
 
+    private function pesanTidakBerhak(): array
+    {
+        return ['akses' => 'Anda tidak memiliki hak akses menu ini.'];
+    }
+
     private function kelasWali(int $guruId)
     {
         return DB::table('guru_role')
@@ -65,6 +70,43 @@ class GuruController extends Controller
             'mapel' => DB::table('mata_pelajaran')->where('guru_id', $guru->id)->get(),
             'roles' => DB::table('guru_role')->where('guru_id', $guru->id)->pluck('role')->toArray(),
         ]);
+    }
+
+    public function biodata()
+    {
+        return view('guru.biodata', [
+            'guru' => $this->guru(),
+        ]);
+    }
+
+    public function simpanBiodata(Request $request)
+    {
+        $guru = $this->guru();
+        $data = $request->validate([
+            'nama_guru' => 'required|string|max:255',
+            'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+            'telepon' => 'nullable|string|max:255',
+            'alamat' => 'nullable|string',
+        ]);
+
+        DB::transaction(function () use ($guru, $data) {
+            DB::table('guru')->where('id', $guru->id)->update([
+                'nama_guru' => $data['nama_guru'],
+                'jenis_kelamin' => $data['jenis_kelamin'],
+                'telepon' => $data['telepon'] ?? null,
+                'alamat' => $data['alamat'] ?? null,
+                'updated_at' => now(),
+            ]);
+
+            DB::table('pengguna')->where('id', $guru->pengguna_id)->update([
+                'nama' => $data['nama_guru'],
+                'updated_at' => now(),
+            ]);
+        });
+
+        session(['nama_pengguna' => $data['nama_guru']]);
+
+        return back()->with('sukses', 'Biodata berhasil diperbarui.');
     }
 
     public function nilai(Request $request, ?int $mapel = null)
@@ -99,7 +141,9 @@ class GuruController extends Controller
         $tahunAjaran = $this->tahunAjaranAktif();
         $mataPelajaran = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
 
-        abort_unless($mataPelajaran, 403);
+        if (! $mataPelajaran) {
+            return back()->withErrors($this->pesanTidakBerhak());
+        }
 
         if ($mataPelajaran->kkm === null) {
             return back()->withErrors(['kkm' => 'Isi nilai KKM terlebih dahulu sebelum menginput nilai siswa.']);
@@ -125,7 +169,10 @@ class GuruController extends Controller
     public function simpanKkm(Request $request, int $mapel)
     {
         $guru = $this->guru();
-        abort_unless(DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->exists(), 403);
+
+        if (! DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->exists()) {
+            return back()->withErrors($this->pesanTidakBerhak());
+        }
 
         $data = $request->validate([
             'kkm' => 'required|numeric|min:0|max:100',
@@ -145,7 +192,9 @@ class GuruController extends Controller
         $tahunAjaran = $this->tahunAjaranAktif();
         $aktif = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
 
-        abort_unless($aktif, 403);
+        if (! $aktif) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
+        }
 
         $kelasId = $request->integer('kelas_id');
         $kelasId = $kelasId ?: $aktif->kelas_id;
@@ -172,7 +221,10 @@ class GuruController extends Controller
     public function catatan()
     {
         $guru = $this->guru();
-        abort_unless(DB::table('guru_role')->where('guru_id', $guru->id)->where('role', 'wali kelas')->exists(), 403);
+
+        if (! DB::table('guru_role')->where('guru_id', $guru->id)->where('role', 'wali kelas')->exists()) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
+        }
 
         return view('guru.catatan', [
             'siswa' => DB::table('siswa')->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')->select('siswa.*', 'kelas.nama_kelas')->orderBy('nama_siswa')->get(),
@@ -184,7 +236,11 @@ class GuruController extends Controller
     public function simpanCatatan(Request $request)
     {
         $guru = $this->guru();
-        abort_unless(DB::table('guru_role')->where('guru_id', $guru->id)->where('role', 'wali kelas')->exists(), 403);
+
+        if (! DB::table('guru_role')->where('guru_id', $guru->id)->where('role', 'wali kelas')->exists()) {
+            return back()->withErrors($this->pesanTidakBerhak());
+        }
+
         $data = $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
             'catatan' => 'nullable',
@@ -223,12 +279,16 @@ class GuruController extends Controller
         $guru = $this->guru();
         $kelasWali = $this->kelasWali($guru->id);
 
-        abort_if($kelasWali->isEmpty(), 403, 'Anda belum terdaftar sebagai wali kelas.');
+        if ($kelasWali->isEmpty()) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
+        }
 
         $tahunAjaran = $this->tahunAjaranAktif();
         $kelasAktif = $request->integer('kelas_id') ?: $kelasWali->first()->id;
 
-        abort_unless($kelasWali->contains('id', $kelasAktif), 403);
+        if (! $kelasWali->contains('id', $kelasAktif)) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
+        }
 
         $siswa = DB::table('siswa')
             ->where('kelas_id', $kelasAktif)
@@ -265,7 +325,10 @@ class GuruController extends Controller
             ->first();
 
         abort_unless($siswa, 404);
-        abort_unless($kelasWali->contains('id', $siswa->kelas_id), 403);
+
+        if (! $kelasWali->contains('id', $siswa->kelas_id)) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
+        }
 
         $dataSekolah = DB::table('data_sekolah')->first();
         $tingkat = (int) ($siswa->tingkat ?: preg_replace('/\D+/', '', (string) $siswa->nama_kelas));
@@ -344,7 +407,9 @@ class GuruController extends Controller
         $tahunAjaran = $this->tahunAjaranAktif();
         $kelasId = $request->integer('kelas_id');
 
-        abort_unless($kelasWali->contains('id', $kelasId), 403);
+        if (! $kelasWali->contains('id', $kelasId)) {
+            return back()->withErrors($this->pesanTidakBerhak());
+        }
 
         $siswaKelas = DB::table('siswa')
             ->where('kelas_id', $kelasId)

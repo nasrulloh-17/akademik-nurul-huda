@@ -8,6 +8,8 @@
         'guru' => 'Guru',
         'siswa' => 'Siswa',
     ][$jenisPengguna] ?? 'Pengguna';
+    $identitasPengguna = session('identitas_pengguna')
+        ?? \Illuminate\Support\Facades\DB::table('pengguna')->where('id', session('pengguna_id'))->value('identitas');
 @endphp
 
 <div class="shell" data-dashboard-shell>
@@ -38,6 +40,7 @@
                 <a class="{{ request()->routeIs('admin.mata-pelajaran') ? 'active' : '' }}" href="{{ route('admin.mata-pelajaran') }}">Mata Pelajaran</a>
             @elseif($jenisPengguna === 'guru')
                 <a class="{{ request()->routeIs('guru.dashboard') ? 'active' : '' }}" href="{{ route('guru.dashboard') }}">Dashboard</a>
+                <a class="{{ request()->routeIs('guru.biodata') ? 'active' : '' }}" href="{{ route('guru.biodata') }}">Biodata</a>
                 <a class="{{ request()->routeIs('guru.nilai') ? 'active' : '' }}" href="{{ route('guru.nilai') }}">Input Nilai</a>
                 <a class="{{ request()->routeIs('guru.kegiatan-tambahan') ? 'active' : '' }}" href="{{ route('guru.kegiatan-tambahan') }}">Kegiatan Tambahan</a>
                 <a class="{{ request()->routeIs('guru.catatan') ? 'active' : '' }}" href="{{ route('guru.catatan') }}">Catatan Walikelas</a>
@@ -57,7 +60,13 @@
         <div class="top">
             <div>
                 <h2 style="margin:0">@yield('judul_halaman')</h2>
-                <div class="muted">{{ session('nama_pengguna') }}</div>
+                <div class="muted">
+                    {{ session('nama_pengguna') }}
+
+                    @if($identitasPengguna)
+                        <span>({{ $jenisPengguna === 'guru' ? 'ID Guru' : ($jenisPengguna === 'siswa' ? 'ID Siswa' : 'ID') }}: {{ $identitasPengguna }})</span>
+                    @endif
+                </div>
             </div>
 
             <form method="post" action="{{ route('keluar') }}">
