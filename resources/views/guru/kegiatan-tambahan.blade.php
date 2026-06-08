@@ -3,6 +3,47 @@
 @section('judul_halaman', 'Input Nilai Kegiatan Tambahan')
 
 @section('konten')
+<style>
+    .kegiatan-table {
+        min-width: 760px;
+    }
+
+    .kegiatan-nis {
+        width: 140px;
+    }
+
+    .kegiatan-nama {
+        width: 220px;
+    }
+
+    @media (max-width: 640px) {
+        .kegiatan-hide-mobile {
+            display: none;
+        }
+
+        .kegiatan-table {
+            min-width: 560px;
+        }
+
+        .kegiatan-nama {
+            width: 150px;
+        }
+
+        .kegiatan-table select {
+            min-width: 118px !important;
+        }
+
+        .kegiatan-table input[type="number"] {
+            min-width: 64px !important;
+        }
+
+        .raport-list-table .btn {
+            padding: 7px 9px;
+            font-size: 12px;
+        }
+    }
+</style>
+
 <div class="card">
     <form method="get" action="{{ route('guru.kegiatan-tambahan') }}">
         <div class="form-grid">
@@ -36,16 +77,16 @@
 
         @if($siswa->isNotEmpty())
             <div style="overflow-x:auto;margin-bottom:24px">
-                <table>
+                <table class="raport-list-table">
                     <tr>
-                        <th>NIS</th>
+                        <th class="kegiatan-hide-mobile">NIS</th>
                         <th>Nama Siswa</th>
                         <th>Cetak Raport</th>
                     </tr>
 
                     @foreach($siswa as $murid)
                         <tr>
-                            <td>{{ $murid->nis }}</td>
+                            <td class="kegiatan-hide-mobile">{{ $murid->nis }}</td>
                             <td>{{ $murid->nama_siswa }}</td>
                             <td>
                                 <a class="btn alt" href="{{ route('guru.raport.cetak', $murid->id) }}" target="_blank">
@@ -62,10 +103,10 @@
                     <h4>{{ $kategori }}</h4>
 
                     <div style="overflow-x:auto">
-                        <table style="min-width:760px">
+                        <table class="kegiatan-table">
                             <tr>
-                                <th style="width:140px">NIS</th>
-                                <th style="width:220px">Nama Siswa</th>
+                                <th class="kegiatan-nis kegiatan-hide-mobile">NIS</th>
+                                <th class="kegiatan-nama">Nama Siswa</th>
                                 @foreach($kegiatanList as $kegiatan)
                                     <th>{{ $kegiatan }}</th>
                                 @endforeach
@@ -73,7 +114,7 @@
 
                             @foreach($siswa as $murid)
                                 <tr>
-                                    <td>{{ $murid->nis }}</td>
+                                    <td class="kegiatan-hide-mobile">{{ $murid->nis }}</td>
                                     <td>
                                         <strong>{{ $murid->nama_siswa }}</strong>
                                     </td>

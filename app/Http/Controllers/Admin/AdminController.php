@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -46,6 +48,37 @@ class AdminController extends Controller
         $file->move(public_path("uploads/$folder"), $namaFile);
 
         return "uploads/$folder/$namaFile";
+    }
+
+    private function buatIdGuru(string $tanggalLahir, ?int $abaikanGuruId = null): string
+    {
+        $prefix = Carbon::parse($tanggalLahir)->format('dmy');
+
+        for ($seri = 0; $seri <= 99; $seri++) {
+            $idGuru = $prefix.str_pad((string) $seri, 2, '0', STR_PAD_LEFT);
+
+            $dipakaiGuru = DB::table('guru')
+                ->where('id_guru', $idGuru)
+                ->when($abaikanGuruId, fn ($query) => $query->where('id', '!=', $abaikanGuruId))
+                ->exists();
+
+            $dipakaiPengguna = DB::table('pengguna')
+                ->where('identitas', $idGuru)
+                ->when($abaikanGuruId, function ($query) use ($abaikanGuruId) {
+                    $penggunaId = DB::table('guru')->where('id', $abaikanGuruId)->value('pengguna_id');
+
+                    return $penggunaId ? $query->where('id', '!=', $penggunaId) : $query;
+                })
+                ->exists();
+
+            if (! $dipakaiGuru && ! $dipakaiPengguna) {
+                return $idGuru;
+            }
+        }
+
+        throw ValidationException::withMessages([
+            'tanggal_lahir' => 'Seri ID guru untuk tanggal lahir ini sudah penuh.',
+        ]);
     }
 
     public function dashboard()
@@ -245,8 +278,9 @@ class AdminController extends Controller
     {
         $this->jaga();
         $data = $request->validate([
-            'id_guru' => 'required',
             'nama_guru' => 'required',
+            'tanggal_lahir' => 'required|date',
+            'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
             'kata_sandi' => 'required',
             'role' => 'array',
             'role.*' => 'in:pengampu mata pelajaran,wali kelas,staff',
@@ -267,9 +301,11 @@ class AdminController extends Controller
         }
 
         DB::transaction(function () use ($data) {
+            $idGuru = $this->buatIdGuru($data['tanggal_lahir']);
+
             $penggunaId = DB::table('pengguna')->insertGetId([
                 'nama' => $data['nama_guru'],
-                'identitas' => $data['id_guru'],
+                'identitas' => $idGuru,
                 'kata_sandi' => Hash::make($data['kata_sandi']),
                 'jenis_pengguna' => 'guru',
                 'created_at' => now(),
@@ -277,8 +313,10 @@ class AdminController extends Controller
             ]);
             $guruId = DB::table('guru')->insertGetId([
                 'pengguna_id' => $penggunaId,
-                'id_guru' => $data['id_guru'],
+                'id_guru' => $idGuru,
                 'nama_guru' => $data['nama_guru'],
+                'tanggal_lahir' => $data['tanggal_lahir'],
+                'jenis_kelamin' => $data['jenis_kelamin'],
                 'telepon' => $data['telepon'] ?? null,
                 'alamat' => $data['alamat'] ?? null,
                 'created_at' => now(),
@@ -315,12 +353,9 @@ class AdminController extends Controller
         abort_unless($guru, 404);
 
         $data = $request->validate([
-            'id_guru' => [
-                'required',
-                Rule::unique('guru', 'id_guru')->ignore($id),
-                Rule::unique('pengguna', 'identitas')->ignore($guru->pengguna_id),
-            ],
             'nama_guru' => 'required',
+            'tanggal_lahir' => 'required|date',
+            'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
             'role' => 'array',
             'role.*' => 'in:pengampu mata pelajaran,wali kelas,staff',
             'wali_kelas_id' => 'nullable|exists:kelas,id',
@@ -340,15 +375,21 @@ class AdminController extends Controller
         }
 
         DB::transaction(function () use ($data, $guru, $id) {
+            $idGuru = $guru->tanggal_lahir === $data['tanggal_lahir']
+                ? $guru->id_guru
+                : $this->buatIdGuru($data['tanggal_lahir'], $id);
+
             DB::table('pengguna')->where('id', $guru->pengguna_id)->update([
                 'nama' => $data['nama_guru'],
-                'identitas' => $data['id_guru'],
+                'identitas' => $idGuru,
                 'updated_at' => now(),
             ]);
 
             DB::table('guru')->where('id', $id)->update([
-                'id_guru' => $data['id_guru'],
+                'id_guru' => $idGuru,
                 'nama_guru' => $data['nama_guru'],
+                'tanggal_lahir' => $data['tanggal_lahir'],
+                'jenis_kelamin' => $data['jenis_kelamin'],
                 'telepon' => $data['telepon'] ?? null,
                 'alamat' => $data['alamat'] ?? null,
                 'updated_at' => now(),

@@ -7,8 +7,16 @@
     @csrf
 
     <div class="form-grid">
-        <input name="id_guru" placeholder="ID Guru" required>
         <input name="nama_guru" placeholder="Nama Guru" required>
+        <label>
+            Tanggal Lahir
+            <input type="date" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}" required>
+        </label>
+        <select name="jenis_kelamin" required>
+            <option value="">Pilih jenis kelamin</option>
+            <option value="Laki-laki" @selected(old('jenis_kelamin') === 'Laki-laki')>Laki-laki</option>
+            <option value="Perempuan" @selected(old('jenis_kelamin') === 'Perempuan')>Perempuan</option>
+        </select>
         <input type="password" name="kata_sandi" placeholder="Password" required>
         <input name="telepon" placeholder="Telepon">
     </div>
@@ -95,6 +103,8 @@
     <tr>
         <th>ID Guru</th>
         <th>Nama Guru</th>
+        <th>Tanggal Lahir</th>
+        <th>Jenis Kelamin</th>
         <th>Role</th>
         <th>Telepon</th>
         <th>Ubah Password</th>
@@ -110,6 +120,8 @@
         <tr>
             <td>{{ $item->id_guru }}</td>
             <td>{{ $item->nama_guru }}</td>
+            <td>{{ $item->tanggal_lahir ? \Carbon\Carbon::parse($item->tanggal_lahir)->format('d-m-Y') : '-' }}</td>
+            <td>{{ $item->jenis_kelamin ?? '-' }}</td>
             <td>
                 @if($roleItems->isNotEmpty())
                     @foreach($roleItems as $role)
@@ -148,10 +160,32 @@
                         @csrf
 
                         <div class="form-grid">
-                            <input name="id_guru" value="{{ $item->id_guru }}" placeholder="ID Guru" required>
                             <input name="nama_guru" value="{{ $item->nama_guru }}" placeholder="Nama Guru" required>
+                            <label>
+                                Tanggal Lahir
+                                <input
+                                    type="date"
+                                    name="tanggal_lahir"
+                                    value="{{ $item->tanggal_lahir }}"
+                                    required
+                                >
+                            </label>
+                            <select name="jenis_kelamin" required>
+                                <option value="">Pilih jenis kelamin</option>
+                                <option value="Laki-laki" @selected($item->jenis_kelamin === 'Laki-laki')>
+                                    Laki-laki
+                                </option>
+                                <option value="Perempuan" @selected($item->jenis_kelamin === 'Perempuan')>
+                                    Perempuan
+                                </option>
+                            </select>
                             <input name="telepon" value="{{ $item->telepon }}" placeholder="Telepon">
                         </div>
+
+                        <p class="muted">
+                            ID guru saat ini: <strong>{{ $item->id_guru }}</strong>.
+                            Jika tanggal lahir diubah, ID guru akan dibuat ulang otomatis.
+                        </p>
 
                         <p>
                             <textarea name="alamat" placeholder="Alamat">{{ $item->alamat }}</textarea>

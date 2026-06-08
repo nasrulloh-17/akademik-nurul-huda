@@ -23,6 +23,41 @@
         box-shadow: 0 12px 30px rgba(0, 71, 76, .2);
     }
 
+    .nav-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--putih);
+        font-weight: 800;
+        letter-spacing: .2px;
+    }
+
+    .nav-brand img {
+        width: 38px;
+        height: 38px;
+        object-fit: contain;
+        flex: 0 0 auto;
+    }
+
+    .nav-toggle {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, .42);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .14);
+        color: var(--putih);
+        cursor: pointer;
+        font-weight: 800;
+        padding: 9px 13px;
+        transition: background .2s ease, transform .2s ease;
+    }
+
+    .nav-toggle:hover {
+        background: rgba(255, 255, 255, .24);
+        transform: translateY(-1px);
+    }
+
     .nav-menu {
         display: flex;
         align-items: center;
@@ -88,9 +123,9 @@
     }
 
     .hero {
-        padding: 110px 7vw 50px;
+        padding: 96px 7vw 38px;
         background: url('{{ asset('images/bg-utama.png') }}') center/cover no-repeat;
-        min-height: 620px;
+        min-height: 560px;
     }
 
     .hero-grid {
@@ -212,12 +247,12 @@
     }
 
     .section {
-        padding: 54px 7vw;
+        padding: 38px 7vw;
         text-align: center;
     }
 
     .section-jenjang {
-        padding-top: 24px;
+        padding-top: 14px;
     }
 
     .cards {
@@ -304,7 +339,7 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 18px;
         max-width: 1080px;
-        margin: 28px auto 0;
+        margin: 18px auto 0;
     }
 
     .jenjang-card {
@@ -340,7 +375,8 @@
 
     .jenjang-logo-img {
         width: 100%;
-        height: 150px;
+        aspect-ratio: 16 / 9;
+        height: auto;
         object-fit: cover;
         border-radius: 10px;
         display: block;
@@ -367,7 +403,7 @@
     .prestasi-carousel {
         position: relative;
         max-width: 1180px;
-        margin: 28px auto 0;
+        margin: 18px auto 0;
     }
 
     .prestasi-window {
@@ -451,7 +487,7 @@
         column-count: 4;
         column-gap: 16px;
         max-width: 1180px;
-        margin: 28px auto 0;
+        margin: 18px auto 0;
         text-align: left;
     }
 
@@ -475,12 +511,18 @@
     .galeri-caption {
         padding: 10px 12px;
         color: var(--gelap);
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 700;
     }
 
+    .galeri-more-wrap {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
     .bantuan {
-        padding: 54px 7vw;
+        padding: 38px 7vw;
         text-align: center;
     }
 
@@ -616,19 +658,92 @@
 
     @media (max-width: 850px) {
         .nav {
-            flex-wrap: wrap;
-            gap: 14px;
+            gap: 12px;
+            padding: 8px 5vw;
         }
 
-        .nav-menu {
-            gap: 16px;
-            font-size: 14px;
+        .nav-brand span {
+            display: none;
+        }
+
+        .nav-brand img {
+            width: 34px;
+            height: 34px;
+        }
+
+        .nav-toggle {
+            display: inline-flex;
+            margin-left: auto;
+            padding: 7px 11px;
+            font-size: 13px;
         }
 
         .nav-actions {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 5vw;
+            right: 5vw;
+            display: none;
+            width: auto;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            margin-left: 0;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, .22);
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(0, 121, 121, .98), rgba(15, 190, 168, .98));
+            box-shadow: 0 18px 42px rgba(0, 71, 76, .24);
+        }
+
+        .nav.menu-open .nav-actions {
+            display: flex;
+        }
+
+        .nav-menu {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 4px;
+            font-size: 15px;
+        }
+
+        .nav-menu a {
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255, 255, 255, .14);
+            transform: none;
+        }
+
+        .login-menu {
+            margin: 4px 0 0;
+            padding-bottom: 0;
+        }
+
+        .login-menu .btn {
             width: 100%;
-            justify-content: flex-end;
-            gap: 14px;
+        }
+
+        .drop {
+            position: static;
+            display: none;
+            min-width: 100%;
+            margin-top: 8px;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: none;
+        }
+
+        .login-menu:hover .drop,
+        .login-menu:focus-within .drop {
+            display: block;
+        }
+
+        .drop::before {
+            display: none;
         }
 
         .hero-grid {
@@ -641,12 +756,20 @@
         }
 
         .hero {
-            padding-top: 96px;
+            min-height: auto;
+            padding: 76px 5vw 30px;
+        }
+
+        .section {
+            padding: 30px 5vw;
+        }
+
+        .section-jenjang {
+            padding-top: 10px;
         }
 
         .hero-copy {
             font-size: 14px;
-
         }
 
         .news-item {
@@ -654,7 +777,13 @@
         }
 
         .jenjang-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-top: 14px;
+        }
+
+        .prestasi-carousel,
+        .galeri-masonry {
+            margin-top: 14px;
         }
 
         .prestasi-card {
@@ -667,20 +796,102 @@
     }
 
     @media (max-width: 560px) {
+        .jenjang-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .jenjang-card {
+            padding: 12px;
+            gap: 7px;
+        }
+
+        .jenjang-logo-img {
+            aspect-ratio: 4 / 2;
+        }
+
+        .jenjang-card h3 {
+            font-size: 12px;
+            line-height: 1.2;
+        }
+
+        .jenjang-card h4 {
+            font-size: 14px;
+            line-height: 1.25;
+        }
+
+        .jenjang-card p {
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
         .prestasi-card {
             flex-basis: 100%;
         }
 
         .galeri-masonry {
-            column-count: 1;
+            column-count: 2;
+            column-gap: 12px;
+        }
+
+        .bantuan {
+            padding: 28px 5vw;
+        }
+
+        .bantuan-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px 12px;
+        }
+
+        .bantuan-item {
+            gap: 7px;
+            padding: 6px;
+        }
+
+        .bantuan-item img {
+            width: 48px;
+            height: 48px;
+        }
+
+        .bantuan-item h4 {
+            font-size: 15px;
+            line-height: 1.25;
+        }
+
+        .bantuan-item p {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .bantuan-kontak {
+            justify-items: end;
+            text-align: right;
+        }
+
+        .bantuan-sosial {
+            justify-items: start;
+            text-align: left;
+        }
+
+        .bantuan-alamat {
+            grid-column: 1 / -1;
+            justify-items: center;
+            text-align: center;
         }
     }
 </style>
 
 <nav class="nav" data-main-nav>
-    <div style="color:var(--putih)">Yayasan Nurul Huda Munjuk</div>
+    <div class="nav-brand">
+        <img src="{{ asset('images/icon.png') }}" alt="Ikon Yayasan Nurul Huda Munjuk">
+        <span>Yayasan Nurul Huda Munjuk</span>
+    </div>
 
-    <div class="nav-actions">
+    <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false">
+        Menu
+    </button>
+
+    <div class="nav-actions" data-nav-actions>
         <div class="nav-menu">
             <a href="#pendaftaran">Pendaftaran</a>
             <a href="#prestasi">Prestasi</a>
@@ -853,9 +1064,9 @@
     <h2>Galeri Foto</h2>
 
     @if($galeri->count())
-        <div class="galeri-masonry">
+        <div class="galeri-masonry" data-galeri-list>
             @foreach($galeri as $item)
-                <figure class="galeri-item">
+                <figure class="galeri-item" data-galeri-item>
                     <img src="{{ asset($item->foto) }}" alt="{{ $item->judul ?: 'Foto galeri Yayasan Nurul Huda Munjuk' }}">
 
                     @if($item->judul)
@@ -863,6 +1074,10 @@
                     @endif
                 </figure>
             @endforeach
+        </div>
+
+        <div class="galeri-more-wrap">
+            <button class="btn utama" type="button" data-galeri-more>Lihat lainnya</button>
         </div>
     @else
         <div class="clean-item">Galeri foto akan tampil setelah diisi admin.</div>
@@ -887,7 +1102,7 @@
 
 <section class="bantuan" id="kontak">
     <div class="bantuan-grid">
-        <div class="bantuan-item">
+        <div class="bantuan-item bantuan-kontak">
             <img src="{{ asset ('images/telepon.svg') }}" alt="Kontak Pengurus" >
             <h4>Kontak Pengurus</h4>
             <p>Cara paling cepat dan efektif untuk mendapatkan informasi.</p>
@@ -905,7 +1120,7 @@
             </p>
         </div>
 
-        <div class="bantuan-item">
+        <div class="bantuan-item bantuan-sosial">
             <img src="{{ asset ('images/medsos.svg') }}" alt="Informasi dan Kontak">
             <h4>Sosial Media</h4>
             <p>Ikuti kami di media sosial untuk informasi terbaru.</p>
@@ -923,7 +1138,7 @@
             </p>
         </div>
 
-        <div class="bantuan-item">
+        <div class="bantuan-item bantuan-alamat">
             <img src="{{ asset ('images/alamat.svg') }}" alt="Alamat">
             <h4>Alamat</h4>
             <p>Jl. Lintas Pantai Timur Sumatera, Dusun Munjuk, Desa Labuhan Maringgai, Kec. Labuhan Maringgai, Lampung Timur</p>
@@ -952,12 +1167,41 @@
     const mainNav = document.querySelector('[data-main-nav]');
 
     if (mainNav) {
+        const navToggle = mainNav.querySelector('[data-nav-toggle]');
+
         const updateNavbar = () => {
             mainNav.classList.toggle('scrolled', window.scrollY > 40);
         };
 
+        const closeMobileMenu = () => {
+            mainNav.classList.remove('menu-open');
+            navToggle?.setAttribute('aria-expanded', 'false');
+        };
+
         updateNavbar();
         window.addEventListener('scroll', updateNavbar, { passive: true });
+
+        navToggle?.addEventListener('click', () => {
+            const isOpen = mainNav.classList.toggle('menu-open');
+
+            navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        mainNav.querySelectorAll('.nav-menu a').forEach((link) => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+
+        document.addEventListener('click', (event) => {
+            if (! mainNav.contains(event.target)) {
+                closeMobileMenu();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (! window.matchMedia('(max-width: 850px)').matches) {
+                closeMobileMenu();
+            }
+        });
     }
 
     document.querySelectorAll('[data-slider]').forEach((slider) => {
@@ -1099,6 +1343,42 @@
 
         window.addEventListener('resize', updatePrestasi);
         updatePrestasi();
+    });
+
+    document.querySelectorAll('[data-galeri-list]').forEach((gallery) => {
+        const items = Array.from(gallery.querySelectorAll('[data-galeri-item]'));
+        const moreButton = gallery.parentElement.querySelector('[data-galeri-more]');
+        let shownItems = 0;
+
+        if (! moreButton) {
+            return;
+        }
+
+        const itemLimit = () => window.matchMedia('(max-width: 560px)').matches ? 10 : 16;
+
+        const updateGallery = (reset = false) => {
+            const limit = itemLimit();
+
+            if (reset || shownItems === 0) {
+                shownItems = Math.min(limit, items.length);
+            } else {
+                shownItems = Math.min(shownItems, items.length);
+            }
+
+            items.forEach((item, index) => {
+                item.hidden = index >= shownItems;
+            });
+
+            moreButton.hidden = shownItems >= items.length;
+        };
+
+        moreButton.addEventListener('click', () => {
+            shownItems = Math.min(shownItems + itemLimit(), items.length);
+            updateGallery();
+        });
+
+        window.addEventListener('resize', () => updateGallery(true));
+        updateGallery(true);
     });
 </script>
 @endsection

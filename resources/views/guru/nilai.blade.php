@@ -3,6 +3,35 @@
 @section('judul_halaman', 'Input Nilai')
 
 @section('konten')
+<style>
+    .nilai-kkm-bar {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) minmax(180px, 260px) auto;
+        gap: 12px;
+        align-items: end;
+        margin-bottom: 12px;
+    }
+
+    @media (max-width: 640px) {
+        .nilai-hide-mobile {
+            display: none;
+        }
+
+        .nilai-kkm-bar {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+        }
+
+        .nilai-kkm-bar .btn {
+            width: 100%;
+        }
+
+        .nilai-input {
+            min-width: 64px;
+        }
+    }
+</style>
+
 <div class="card">
     @forelse($mapelGuru as $m)
         <a class="btn {{ $aktif && $aktif->id === $m->id ? '' : 'alt' }}" href="{{ route('guru.nilai', $m->id) }}">
@@ -41,9 +70,7 @@
         @csrf
 
         <div class="card">
-            <div
-                style="display:grid;grid-template-columns:minmax(220px,1fr) minmax(180px,260px) auto;gap:12px;align-items:end;margin-bottom:12px"
-            >
+            <div class="nilai-kkm-bar">
                 <div>
                     <h3 style="margin:0">{{ $aktif->nama_mata_pelajaran }}</h3>
                     <p class="muted" style="margin-bottom:0">
@@ -84,9 +111,9 @@
 
             <table>
                 <tr>
-                    <th>NIS</th>
+                    <th class="nilai-hide-mobile">NIS</th>
                     <th>Nama Siswa</th>
-                    <th>Kelas</th>
+                    <th class="nilai-hide-mobile">Kelas</th>
                     <th>Nilai Tugas</th>
                     <th>Nilai UTS</th>
                     <th>Nilai UAS</th>
@@ -98,9 +125,9 @@
                     @php($n = $nilai[$murid->id] ?? null)
 
                     <tr>
-                        <td>{{ $murid->nis }}</td>
+                        <td class="nilai-hide-mobile">{{ $murid->nis }}</td>
                         <td>{{ $murid->nama_siswa }}</td>
-                        <td>{{ $murid->nama_kelas }}</td>
+                        <td class="nilai-hide-mobile">{{ $murid->nama_kelas }}</td>
                         <td>
                             <input
                                 class="nilai-input"
