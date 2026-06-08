@@ -96,6 +96,18 @@
             margin: 8px 0 4px;
         }
 
+        .paired-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .paired-sections table {
+            margin-bottom: 0;
+        }
+
         .below-kkm {
             color: #c1121f;
             font-weight: 700;
@@ -196,6 +208,7 @@
         $pengembanganDiri = $kegiatanTambahan['Pengembangan Diri'] ?? collect();
         $kepribadian = $kegiatanTambahan['Kepribadian'] ?? collect();
         $kehadiran = ($kegiatanTambahan['Kehadiran'] ?? collect())->keyBy('kegiatan');
+        $tanggalCetak = now()->locale('id')->translatedFormat('d F Y');
     @endphp
 
     <div class="toolbar">
@@ -278,91 +291,103 @@
             @endforelse
         </table>
 
-        <div class="section-title">B. Pengembangan Diri</div>
+        <div class="paired-sections">
+            <section>
+                <div class="section-title">B. Ekstrakurikuler</div>
 
-        <table>
-            <tr>
-                <th style="width:32px">No</th>
-                <th>Kegiatan</th>
-                <th style="width:170px">Nilai</th>
-            </tr>
+                <table>
+                    <tr>
+                        <th style="width:32px">No</th>
+                        <th>Kegiatan</th>
+                        <th style="width:90px">Nilai</th>
+                    </tr>
 
-            @forelse($pengembanganDiri as $kegiatan)
-                <tr>
-                    <td class="center">{{ $loop->iteration }}</td>
-                    <td>{{ $kegiatan->kegiatan }}</td>
-                    <td class="center">{{ $kegiatan->nilai ?? '-' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="3" class="center">Belum ada nilai pengembangan diri.</td>
-                </tr>
-            @endforelse
-        </table>
+                    @forelse($ekstrakurikuler as $kegiatan)
+                        <tr>
+                            <td class="center">{{ $loop->iteration }}</td>
+                            <td>{{ $kegiatan->kegiatan }}</td>
+                            <td class="center">{{ $kegiatan->nilai ?? '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="center">Belum ada nilai ekstrakurikuler.</td>
+                        </tr>
+                    @endforelse
+                </table>
+            </section>
 
-        <div class="section-title">C. Ekstrakurikuler</div>
+            <section>
+                <div class="section-title">C. Pengembangan Diri</div>
 
-        <table>
-            <tr>
-                <th style="width:32px">No</th>
-                <th>Kegiatan</th>
-                <th style="width:170px">Nilai</th>
-            </tr>
+                <table>
+                    <tr>
+                        <th style="width:32px">No</th>
+                        <th>Kegiatan</th>
+                        <th style="width:90px">Nilai</th>
+                    </tr>
 
-            @forelse($ekstrakurikuler as $kegiatan)
-                <tr>
-                    <td class="center">{{ $loop->iteration }}</td>
-                    <td>{{ $kegiatan->kegiatan }}</td>
-                    <td class="center">{{ $kegiatan->nilai ?? '-' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="3" class="center">Belum ada nilai ekstrakurikuler.</td>
-                </tr>
-            @endforelse
-        </table>
+                    @forelse($pengembanganDiri as $kegiatan)
+                        <tr>
+                            <td class="center">{{ $loop->iteration }}</td>
+                            <td>{{ $kegiatan->kegiatan }}</td>
+                            <td class="center">{{ $kegiatan->nilai ?? '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="center">Belum ada nilai pengembangan diri.</td>
+                        </tr>
+                    @endforelse
+                </table>
+            </section>
+        </div>
 
-        <div class="section-title">D. Kepribadian</div>
+        <div class="paired-sections">
+            <section>
+                <div class="section-title">D. Kepribadian</div>
 
-        <table>
-            <tr>
-                <th style="width:32px">No</th>
-                <th>Aspek</th>
-                <th style="width:170px">Nilai</th>
-            </tr>
+                <table>
+                    <tr>
+                        <th style="width:32px">No</th>
+                        <th>Aspek</th>
+                        <th style="width:90px">Nilai</th>
+                    </tr>
 
-            @forelse($kepribadian as $kegiatan)
-                <tr>
-                    <td class="center">{{ $loop->iteration }}</td>
-                    <td>{{ $kegiatan->kegiatan }}</td>
-                    <td class="center">{{ $kegiatan->nilai ?? '-' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="3" class="center">Belum ada nilai kepribadian.</td>
-                </tr>
-            @endforelse
-        </table>
+                    @forelse($kepribadian as $kegiatan)
+                        <tr>
+                            <td class="center">{{ $loop->iteration }}</td>
+                            <td>{{ $kegiatan->kegiatan }}</td>
+                            <td class="center">{{ $kegiatan->nilai ?? '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="center">Belum ada nilai kepribadian.</td>
+                        </tr>
+                    @endforelse
+                </table>
+            </section>
 
-        <div class="section-title">E. Ketidakhadiran</div>
+            <section>
+                <div class="section-title">E. Ketidakhadiran</div>
 
-        <table style="width:48%">
-            <tr>
-                <td>Sakit</td>
-                <td class="center" style="width:70px">{{ $kehadiran['Sakit']->nilai ?? 0 }}</td>
-                <td class="center" style="width:55px">hari</td>
-            </tr>
-            <tr>
-                <td>Izin</td>
-                <td class="center">{{ $kehadiran['Izin']->nilai ?? 0 }}</td>
-                <td class="center">hari</td>
-            </tr>
-            <tr>
-                <td>Tanpa Keterangan</td>
-                <td class="center">{{ $kehadiran['Tanpa Keterangan']->nilai ?? 0 }}</td>
-                <td class="center">hari</td>
-            </tr>
-        </table>
+                <table>
+                    <tr>
+                        <td>Sakit</td>
+                        <td class="center" style="width:70px">{{ $kehadiran['Sakit']->nilai ?? 0 }}</td>
+                        <td class="center" style="width:55px">hari</td>
+                    </tr>
+                    <tr>
+                        <td>Izin</td>
+                        <td class="center">{{ $kehadiran['Izin']->nilai ?? 0 }}</td>
+                        <td class="center">hari</td>
+                    </tr>
+                    <tr>
+                        <td>Tanpa Keterangan</td>
+                        <td class="center">{{ $kehadiran['Tanpa Keterangan']->nilai ?? 0 }}</td>
+                        <td class="center">hari</td>
+                    </tr>
+                </table>
+            </section>
+        </div>
 
         <div class="signature">
             <div class="signature-box">
@@ -378,6 +403,7 @@
             </div>
 
             <div class="signature-box">
+                <div>Labuhan Maringgai, {{ $tanggalCetak }}</div>
                 <div>Mengetahui,</div>
                 <div>Kepala Sekolah</div>
                 <div class="signature-space"></div>
