@@ -60,6 +60,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/mata-pelajaran', [AdminController::class, 'simpanMataPelajaran'])->name('mata-pelajaran.simpan');
     Route::post('/mata-pelajaran/{id}/ubah', [AdminController::class, 'ubahMataPelajaran'])->name('mata-pelajaran.ubah');
     Route::post('/mata-pelajaran/{id}/hapus', [AdminController::class, 'hapusMataPelajaran'])->name('mata-pelajaran.hapus');
+    Route::get('/admin-user', [AdminController::class, 'adminUser'])->name('admin-user');
+    Route::post('/admin-user', [AdminController::class, 'simpanAdminUser'])->name('admin-user.simpan');
+    Route::post('/admin-user/{id}/password', [AdminController::class, 'ubahPasswordAdminUser'])->name('admin-user.password');
+    Route::post('/admin-user/{id}/hapus', [AdminController::class, 'hapusAdminUser'])->name('admin-user.hapus');
+    Route::get('/backup', [AdminController::class, 'backup'])->name('backup');
+    Route::get('/backup/sql', [AdminController::class, 'unduhBackupSql'])->name('backup.sql');
 });
 
 Route::prefix('guru')->name('guru.')->group(function () {
@@ -76,6 +82,7 @@ Route::prefix('guru')->name('guru.')->group(function () {
     Route::post('/administrasi', [GuruController::class, 'simpanAdministrasi'])->name('administrasi.simpan');
     Route::get('/download-csv', [GuruController::class, 'downloadCsv'])->name('download-csv');
     Route::get('/download-csv/{jenis}', [GuruController::class, 'unduhCsv'])->name('download-csv.unduh');
+    Route::get('/rekap-raport', [GuruController::class, 'rekapRaport'])->name('rekap-raport');
     Route::get('/raport/{siswa}/cetak', [GuruController::class, 'cetakRaportSiswa'])->name('raport.cetak');
     Route::get('/catatan-walikelas', [GuruController::class, 'catatan'])->name('catatan');
     Route::post('/catatan-walikelas', [GuruController::class, 'simpanCatatan'])->name('catatan.simpan');

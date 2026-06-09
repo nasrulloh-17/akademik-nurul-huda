@@ -4,7 +4,24 @@
 
 @section('konten')
 <div class="card">
-    <a class="btn" href="{{ route('siswa.raport.cetak') }}" target="_blank">Cetak Nilai ke PDF</a>
+    <form method="get" action="{{ route('siswa.raport') }}">
+        <div class="form-grid">
+            <select name="tahun_ajaran_id">
+                <option value="">Semua Tahun Ajaran/Semester</option>
+                @foreach($daftarTahunAjaran as $periode)
+                    <option value="{{ $periode->id }}" @selected(optional($tahunAjaranFilter)->id === $periode->id)>
+                        {{ $periode->nama_tahun_ajaran }} - {{ ucfirst($periode->semester ?? 'ganjil') }}
+                    </option>
+                @endforeach
+            </select>
+
+            <button class="btn">Tampilkan</button>
+
+            <a class="btn alt" href="{{ route('siswa.raport.cetak', request()->only('tahun_ajaran_id')) }}" target="_blank">
+                Cetak Nilai ke PDF
+            </a>
+        </div>
+    </form>
 </div>
 
 <div class="card">

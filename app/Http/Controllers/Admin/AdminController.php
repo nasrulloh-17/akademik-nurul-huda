@@ -81,6 +81,15 @@ class AdminController extends Controller
         ]);
     }
 
+    private function quoteSql($value): string
+    {
+        if ($value === null) {
+            return 'NULL';
+        }
+
+        return "'".str_replace(["\\", "'"], ["\\\\", "\\'"], (string) $value)."'";
+    }
+
     public function dashboard()
     {
         $this->jaga();
@@ -745,5 +754,111 @@ class AdminController extends Controller
         DB::table('mata_pelajaran')->where('id', $id)->delete();
 
         return back()->with('sukses', 'Mata pelajaran berhasil dihapus.');
+    }
+
+    public function adminUser()
+    {
+        $this->jaga();
+
+        return view('admin.admin-user', [
+            'admin' => DB::table('pengguna')->where('jenis_pengguna', 'admin')->orderBy('nama')->get(),
+        ]);
+    }
+
+    public function simpanAdminUser(Request $request)
+    {
+        $this->jaga();
+        $data = $request->validate([
+            'nama' => 'required|string|max:255',
+            'identitas' => 'required|string|max:255|unique:pengguna,identitas',
+            'kata_sandi' => 'required|string|min:6',
+        ]);
+
+        DB::table('pengguna')->insert([
+            'nama' => $data['nama'],
+            'identitas' => $data['identitas'],
+            'kata_sandi' => Hash::make($data['kata_sandi']),
+            'jenis_pengguna' => 'admin',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('sukses', 'Admin baru berhasil ditambahkan.');
+    }
+
+    public function ubahPasswordAdminUser(Request $request, int $id)
+    {
+        $this->jaga();
+        $data = $request->validate(['kata_sandi' => 'required|string|min:6']);
+
+        DB::table('pengguna')->where('id', $id)->where('jenis_pengguna', 'admin')->update([
+            'kata_sandi' => Hash::make($data['kata_sandi']),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('sukses', 'Password admin berhasil diubah.');
+    }
+
+    public function hapusAdminUser(int $id)
+    {
+        $this->jaga();
+
+        if ((int) session('pengguna_id') === $id) {
+            return back()->withErrors(['admin' => 'Admin yang sedang login tidak bisa menghapus akunnya sendiri.']);
+        }
+
+        if (DB::table('pengguna')->where('jenis_pengguna', 'admin')->count() <= 1) {
+            return back()->withErrors(['admin' => 'Minimal harus ada satu akun admin.']);
+        }
+
+        DB::table('pengguna')->where('id', $id)->where('jenis_pengguna', 'admin')->delete();
+
+        return back()->with('sukses', 'Admin berhasil dihapus.');
+    }
+
+    public function backup()
+    {
+        $this->jaga();
+
+        return view('admin.backup', [
+            'tabel' => DB::select('SHOW TABLES'),
+            'folderUpload' => ['uploads/slider', 'uploads/berita', 'uploads/prestasi', 'uploads/galeri', 'uploads/siswa'],
+        ]);
+    }
+
+    public function unduhBackupSql()
+    {
+        $this->jaga();
+        $database = DB::getDatabaseName();
+        $namaFile = 'backup-'.$database.'-'.now()->format('Ymd-His').'.sql';
+
+        return response()->streamDownload(function () use ($database) {
+            echo "-- Backup database $database\n";
+            echo "-- Dibuat pada ".now()->format('Y-m-d H:i:s')."\n\n";
+            echo "SET FOREIGN_KEY_CHECKS=0;\n\n";
+
+            foreach (DB::select('SHOW TABLES') as $tableRow) {
+                $table = array_values((array) $tableRow)[0];
+                $createRow = (array) DB::selectOne("SHOW CREATE TABLE `$table`");
+                $createSql = $createRow['Create Table'] ?? array_values($createRow)[1];
+
+                echo "DROP TABLE IF EXISTS `$table`;\n";
+                echo $createSql.";\n\n";
+
+                $rows = DB::table($table)->get();
+
+                foreach ($rows as $row) {
+                    $data = (array) $row;
+                    $columns = array_map(fn ($column) => "`$column`", array_keys($data));
+                    $values = array_map(fn ($value) => $this->quoteSql($value), array_values($data));
+
+                    echo "INSERT INTO `$table` (".implode(', ', $columns).") VALUES (".implode(', ', $values).");\n";
+                }
+
+                echo "\n";
+            }
+
+            echo "SET FOREIGN_KEY_CHECKS=1;\n";
+        }, $namaFile, ['Content-Type' => 'application/sql; charset=UTF-8']);
     }
 }

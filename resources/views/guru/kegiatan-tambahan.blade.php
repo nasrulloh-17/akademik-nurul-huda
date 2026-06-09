@@ -77,25 +77,7 @@
 
         @if($siswa->isNotEmpty())
             <div style="overflow-x:auto;margin-bottom:24px">
-                <table class="raport-list-table">
-                    <tr>
-                        <th class="kegiatan-hide-mobile">NIS</th>
-                        <th>Nama Siswa</th>
-                        <th>Cetak Raport</th>
-                    </tr>
 
-                    @foreach($siswa as $murid)
-                        <tr>
-                            <td class="kegiatan-hide-mobile">{{ $murid->nis }}</td>
-                            <td>{{ $murid->nama_siswa }}</td>
-                            <td>
-                                <a class="btn alt" href="{{ route('guru.raport.cetak', $murid->id) }}" target="_blank">
-                                    Cetak Raport
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </table>
             </div>
 
             @foreach($kegiatanTambahan as $kategori => $kegiatanList)

@@ -47,6 +47,8 @@
                 <a class="{{ request()->routeIs('admin.kelas') ? 'active' : '' }}" href="{{ route('admin.kelas') }}">Kelas</a>
                 <a class="{{ request()->routeIs('admin.naik-kelas') ? 'active' : '' }}" href="{{ route('admin.naik-kelas') }}">Naik Kelas</a>
                 <a class="{{ request()->routeIs('admin.mata-pelajaran') ? 'active' : '' }}" href="{{ route('admin.mata-pelajaran') }}">Mata Pelajaran</a>
+                <a class="{{ request()->routeIs('admin.admin-user') ? 'active' : '' }}" href="{{ route('admin.admin-user') }}">Admin</a>
+                <a class="{{ request()->routeIs('admin.backup') ? 'active' : '' }}" href="{{ route('admin.backup') }}">Backup</a>
             @elseif($jenisPengguna === 'guru')
                 <a class="{{ request()->routeIs('guru.dashboard') ? 'active' : '' }}" href="{{ route('guru.dashboard') }}">Dashboard</a>
                 <a class="{{ request()->routeIs('guru.biodata') ? 'active' : '' }}" href="{{ route('guru.biodata') }}">Biodata</a>
@@ -56,6 +58,7 @@
                     <a class="{{ request()->routeIs('guru.administrasi') ? 'active' : '' }}" href="{{ route('guru.administrasi') }}">Administrasi</a>
                 @endif
                 <a class="{{ request()->routeIs('guru.catatan') ? 'active' : '' }}" href="{{ route('guru.catatan') }}">Catatan Walikelas</a>
+                <a class="{{ request()->routeIs('guru.rekap-raport') ? 'active' : '' }}" href="{{ route('guru.rekap-raport') }}">Rekap Raport</a>
                 <a class="{{ request()->routeIs('guru.data-siswa') ? 'active' : '' }}" href="{{ route('guru.data-siswa') }}">Data Siswa</a>
                 <a class="{{ request()->routeIs('guru.download-csv*') ? 'active' : '' }}" href="{{ route('guru.download-csv') }}">Download CSV</a>
             @else

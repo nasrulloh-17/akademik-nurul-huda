@@ -101,6 +101,11 @@ class GuruController extends Controller
         return (int) round(($nilai->nilai_tugas * 0.3) + ($nilai->nilai_uts * 0.3) + ($nilai->nilai_uas * 0.4));
     }
 
+    private function nilaiKosongAtauValid($nilai): bool
+    {
+        return $nilai === null || $nilai === '' || (is_numeric($nilai) && $nilai >= 0 && $nilai <= 100);
+    }
+
     public function dashboard()
     {
         $guru = $this->guru();
@@ -401,6 +406,10 @@ class GuruController extends Controller
             $nilaiTugas = $isi['nilai_tugas'] ?? null;
             $nilaiUts = $isi['nilai_uts'] ?? null;
             $nilaiUas = $isi['nilai_uas'] ?? null;
+
+            if (! $this->nilaiKosongAtauValid($nilaiTugas) || ! $this->nilaiKosongAtauValid($nilaiUts) || ! $this->nilaiKosongAtauValid($nilaiUas)) {
+                return back()->withErrors(['nilai' => 'Nilai harus berupa angka 0 sampai 100.'])->withInput();
+            }
 
             DB::table('nilai')->updateOrInsert(
                 ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $mapel, 'tahun_ajaran_id' => $tahunAjaran->id],
@@ -719,6 +728,50 @@ class GuruController extends Controller
             'alamatSekolah' => $dataSekolah->alamat ?? null,
             'catatanWaliKelas' => $catatanWaliKelas,
         ]);
+    }
+
+    public function rekapRaport(Request $request)
+    {
+        $guru = $this->guru();
+        $kelasWali = $this->kelasWali($guru->id);
+
+        if ($kelasWali->isEmpty()) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
+        }
+
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $kelasAktif = $request->integer('kelas_id') ?: $kelasWali->first()->id;
+
+        if (! $kelasWali->contains('id', $kelasAktif)) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
+        }
+
+        $siswa = DB::table('siswa')
+            ->where('kelas_id', $kelasAktif)
+            ->where('status', 'aktif')
+            ->orderBy('nama_siswa')
+            ->get();
+        $mapel = DB::table('mata_pelajaran')
+            ->where(fn ($query) => $query->where('kelas_id', $kelasAktif)->orWhereNull('kelas_id'))
+            ->orderBy('nama_mata_pelajaran')
+            ->get();
+        $nilai = DB::table('nilai')
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->get()
+            ->groupBy('siswa_id');
+        $kegiatanTambahan = DB::table('nilai_kegiatan_tambahan')
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->get()
+            ->groupBy('siswa_id');
+        $catatan = DB::table('catatan_walikelas')
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->get()
+            ->keyBy('siswa_id');
+
+        return view('guru.rekap-raport', compact('kelasWali', 'kelasAktif', 'tahunAjaran', 'siswa', 'mapel', 'nilai', 'kegiatanTambahan', 'catatan'));
     }
 
     public function simpanKegiatanTambahan(Request $request)

@@ -87,25 +87,32 @@ class SiswaController extends Controller
         return back()->with('sukses', 'Biodata berhasil diperbarui.');
     }
 
-    public function raport()
+    public function raport(Request $request)
     {
-        return view('siswa.raport', $this->dataRaport());
+        return view('siswa.raport', $this->dataRaport($request));
     }
 
-    public function cetakRaport()
+    public function cetakRaport(Request $request)
     {
-        return view('siswa.cetak-raport', $this->dataRaport());
+        return view('siswa.cetak-raport', $this->dataRaport($request));
     }
 
-    private function dataRaport(): array
+    private function dataRaport(Request $request): array
     {
         $siswa = $this->siswa();
         $tahunAjaran = $this->tahunAjaranAktif();
+        $daftarTahunAjaran = DB::table('tahun_ajaran')->orderByDesc('id')->get();
+        $filterTahunAjaranId = $request->integer('tahun_ajaran_id');
+        $tahunAjaranFilter = $filterTahunAjaranId
+            ? $daftarTahunAjaran->firstWhere('id', $filterTahunAjaranId)
+            : null;
+        $tahunAjaranPeringkat = $tahunAjaranFilter ?: $tahunAjaran;
         $nilai = DB::table('nilai')
             ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')
             ->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')
             ->leftJoin('tahun_ajaran', 'tahun_ajaran.id', '=', 'nilai.tahun_ajaran_id')
             ->where('nilai.siswa_id', $siswa->id)
+            ->when($tahunAjaranFilter, fn ($query) => $query->where('nilai.tahun_ajaran_id', $tahunAjaranFilter->id))
             ->select(
                 'nilai.*',
                 'mata_pelajaran.nama_mata_pelajaran',
@@ -120,6 +127,7 @@ class SiswaController extends Controller
         $kegiatanTambahan = DB::table('nilai_kegiatan_tambahan')
             ->leftJoin('tahun_ajaran', 'tahun_ajaran.id', '=', 'nilai_kegiatan_tambahan.tahun_ajaran_id')
             ->where('nilai_kegiatan_tambahan.siswa_id', $siswa->id)
+            ->when($tahunAjaranFilter, fn ($query) => $query->where('nilai_kegiatan_tambahan.tahun_ajaran_id', $tahunAjaranFilter->id))
             ->select('nilai_kegiatan_tambahan.*', 'tahun_ajaran.nama_tahun_ajaran', 'tahun_ajaran.semester')
             ->orderByDesc('tahun_ajaran.id')
             ->orderBy('kategori')
@@ -133,15 +141,16 @@ class SiswaController extends Controller
         $catatan = DB::table('catatan_walikelas')
             ->leftJoin('tahun_ajaran', 'tahun_ajaran.id', '=', 'catatan_walikelas.tahun_ajaran_id')
             ->where('catatan_walikelas.siswa_id', $siswa->id)
+            ->when($tahunAjaranFilter, fn ($query) => $query->where('catatan_walikelas.tahun_ajaran_id', $tahunAjaranFilter->id))
             ->select('catatan_walikelas.*', 'tahun_ajaran.nama_tahun_ajaran', 'tahun_ajaran.semester')
             ->orderByDesc('tahun_ajaran.id')
             ->latest('catatan_walikelas.updated_at')
             ->get();
         $catatanPerTahun = $catatan->groupBy($labelPeriode);
         $peringkatKelas = DB::table('siswa')
-            ->leftJoin('nilai', function ($join) use ($tahunAjaran) {
+            ->leftJoin('nilai', function ($join) use ($tahunAjaranPeringkat) {
                 $join->on('nilai.siswa_id', '=', 'siswa.id')
-                    ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
+                    ->where('nilai.tahun_ajaran_id', $tahunAjaranPeringkat->id);
             })
             ->where('siswa.kelas_id', $siswa->kelas_id)
             ->where('siswa.status', 'aktif')
@@ -162,6 +171,8 @@ class SiswaController extends Controller
         return [
             'siswa' => DB::table('siswa')->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')->select('siswa.*', 'kelas.nama_kelas')->where('siswa.id', $siswa->id)->first(),
             'tahunAjaranAktif' => $tahunAjaran,
+            'daftarTahunAjaran' => $daftarTahunAjaran,
+            'tahunAjaranFilter' => $tahunAjaranFilter,
             'nilai' => $nilai,
             'nilaiPerTahun' => $nilaiPerTahun,
             'kegiatanTambahan' => $kegiatanTambahan,
