@@ -74,6 +74,8 @@ Route::prefix('guru')->name('guru.')->group(function () {
     Route::post('/kegiatan-tambahan', [GuruController::class, 'simpanKegiatanTambahan'])->name('kegiatan-tambahan.simpan');
     Route::get('/administrasi', [GuruController::class, 'administrasi'])->name('administrasi');
     Route::post('/administrasi', [GuruController::class, 'simpanAdministrasi'])->name('administrasi.simpan');
+    Route::get('/download-csv', [GuruController::class, 'downloadCsv'])->name('download-csv');
+    Route::get('/download-csv/{jenis}', [GuruController::class, 'unduhCsv'])->name('download-csv.unduh');
     Route::get('/raport/{siswa}/cetak', [GuruController::class, 'cetakRaportSiswa'])->name('raport.cetak');
     Route::get('/catatan-walikelas', [GuruController::class, 'catatan'])->name('catatan');
     Route::post('/catatan-walikelas', [GuruController::class, 'simpanCatatan'])->name('catatan.simpan');

@@ -55,6 +55,7 @@
                 @endif
                 <a class="{{ request()->routeIs('guru.catatan') ? 'active' : '' }}" href="{{ route('guru.catatan') }}">Catatan Walikelas</a>
                 <a class="{{ request()->routeIs('guru.data-siswa') ? 'active' : '' }}" href="{{ route('guru.data-siswa') }}">Data Siswa</a>
+                <a class="{{ request()->routeIs('guru.download-csv*') ? 'active' : '' }}" href="{{ route('guru.download-csv') }}">Download CSV</a>
             @else
                 <a class="{{ request()->routeIs('siswa.dashboard') ? 'active' : '' }}" href="{{ route('siswa.dashboard') }}">Dashboard</a>
                 <a class="{{ request()->routeIs('siswa.biodata') ? 'active' : '' }}" href="{{ route('siswa.biodata') }}">Biodata</a>

@@ -71,6 +71,36 @@ class GuruController extends Controller
             ->get();
     }
 
+    private function streamCsv(string $namaFile, array $header, iterable $baris)
+    {
+        return response()->streamDownload(function () use ($header, $baris) {
+            $output = fopen('php://output', 'w');
+
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, $header, ';');
+
+            foreach ($baris as $row) {
+                fputcsv($output, $row, ';');
+            }
+
+            fclose($output);
+        }, $namaFile, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function namaFileCsv(string $nama): string
+    {
+        return trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $nama), '-');
+    }
+
+    private function angkaNilaiAkhir($nilai): ?int
+    {
+        if ($nilai === null || $nilai->nilai_tugas === null || $nilai->nilai_uts === null || $nilai->nilai_uas === null) {
+            return null;
+        }
+
+        return (int) round(($nilai->nilai_tugas * 0.3) + ($nilai->nilai_uts * 0.3) + ($nilai->nilai_uas * 0.4));
+    }
+
     public function dashboard()
     {
         $guru = $this->guru();
@@ -116,6 +146,215 @@ class GuruController extends Controller
         session(['nama_pengguna' => $data['nama_guru']]);
 
         return back()->with('sukses', 'Biodata berhasil diperbarui.');
+    }
+
+    public function downloadCsv()
+    {
+        $this->guru();
+
+        return view('guru.download-csv', [
+            'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
+            'tahunAjaran' => $this->tahunAjaranAktif(),
+        ]);
+    }
+
+    public function unduhCsv(Request $request, string $jenis)
+    {
+        $this->guru();
+
+        return match ($jenis) {
+            'guru' => $this->unduhCsvGuru(),
+            'siswa' => $this->unduhCsvSiswa(),
+            'nilai-akhir' => $this->unduhCsvNilaiAkhir($request),
+            'ketidakhadiran' => $this->unduhCsvKetidakhadiran($request),
+            default => abort(404),
+        };
+    }
+
+    private function unduhCsvGuru()
+    {
+        $guru = DB::table('guru')
+            ->leftJoin('guru_role', 'guru_role.guru_id', '=', 'guru.id')
+            ->leftJoin('kelas', 'kelas.id', '=', 'guru_role.kelas_id')
+            ->select('guru.*', 'guru_role.role', 'guru_role.staff_jenis', 'kelas.nama_kelas')
+            ->orderBy('guru.nama_guru')
+            ->get()
+            ->groupBy('id');
+        $baris = [];
+        $nomor = 1;
+
+        foreach ($guru as $roleItems) {
+            $item = $roleItems->first();
+            $roles = $roleItems
+                ->filter(fn ($role) => $role->role)
+                ->map(function ($role) {
+                    if ($role->role === 'wali kelas' && $role->nama_kelas) {
+                        return 'Wali Kelas '.$role->nama_kelas;
+                    }
+
+                    if ($role->role === 'staff' && $role->staff_jenis) {
+                        return ucwords($role->staff_jenis);
+                    }
+
+                    return ucwords($role->role);
+                })
+                ->implode(', ');
+
+            $baris[] = [
+                $nomor++,
+                $item->id_guru,
+                $item->nama_guru,
+                $item->tanggal_lahir,
+                $item->jenis_kelamin,
+                $roles ?: '-',
+                $item->telepon,
+                $item->alamat,
+            ];
+        }
+
+        return $this->streamCsv('data-guru.csv', ['No', 'ID Guru', 'Nama Guru', 'Tanggal Lahir', 'Jenis Kelamin', 'Role', 'Telepon', 'Alamat'], $baris);
+    }
+
+    private function unduhCsvSiswa()
+    {
+        $siswa = DB::table('siswa')
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+            ->select('siswa.*', 'kelas.nama_kelas')
+            ->orderBy('siswa.nama_siswa')
+            ->get();
+        $baris = [];
+
+        foreach ($siswa as $index => $item) {
+            $baris[] = [
+                $index + 1,
+                $item->nis,
+                $item->nisn,
+                $item->nama_siswa,
+                $item->nama_kelas,
+                $item->jenis_kelamin,
+                $item->tempat_lahir,
+                $item->tanggal_lahir,
+                $item->telepon,
+                $item->alamat,
+                $item->status,
+            ];
+        }
+
+        return $this->streamCsv('data-siswa.csv', ['No', 'NIS', 'NISN', 'Nama Siswa', 'Kelas', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Telepon', 'Alamat', 'Status'], $baris);
+    }
+
+    private function unduhCsvNilaiAkhir(Request $request)
+    {
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $kelasId = $request->integer('kelas_id');
+        $kelas = DB::table('kelas')->where('id', $kelasId)->first();
+
+        abort_unless($kelas, 404);
+
+        $siswa = DB::table('siswa')
+            ->where('kelas_id', $kelasId)
+            ->where('status', 'aktif')
+            ->orderBy('nama_siswa')
+            ->get();
+        $mapel = DB::table('mata_pelajaran')
+            ->where(fn ($query) => $query->where('kelas_id', $kelasId)->orWhereNull('kelas_id'))
+            ->orderBy('nama_mata_pelajaran')
+            ->get();
+        $nilai = DB::table('nilai')
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->get()
+            ->keyBy(fn ($item) => $item->siswa_id.'|'.$item->mata_pelajaran_id);
+        $rekap = [];
+
+        foreach ($siswa as $murid) {
+            $total = 0;
+            $jumlahMapelDinilai = 0;
+            $nilaiMapel = [];
+
+            foreach ($mapel as $pelajaran) {
+                $nilaiAkhir = $this->angkaNilaiAkhir($nilai[$murid->id.'|'.$pelajaran->id] ?? null);
+                $nilaiMapel[$pelajaran->id] = $nilaiAkhir;
+
+                if ($nilaiAkhir !== null) {
+                    $total += $nilaiAkhir;
+                    $jumlahMapelDinilai++;
+                }
+            }
+
+            $rekap[$murid->id] = [
+                'total' => $total,
+                'rata_rata' => $jumlahMapelDinilai ? round($total / $jumlahMapelDinilai, 2) : 0,
+                'nilai_mapel' => $nilaiMapel,
+            ];
+        }
+
+        $peringkat = collect($rekap)
+            ->sortBy([
+                ['total', 'desc'],
+                ['rata_rata', 'desc'],
+            ])
+            ->keys()
+            ->values()
+            ->flip()
+            ->map(fn ($index) => $index + 1);
+        $header = array_merge(['No', 'Nama Siswa', 'Kelas'], $mapel->pluck('nama_mata_pelajaran')->toArray(), ['Jumlah Total Nilai', 'Rata-rata', 'Peringkat']);
+        $baris = [];
+
+        foreach ($siswa as $index => $murid) {
+            $row = [$index + 1, $murid->nama_siswa, $kelas->nama_kelas];
+
+            foreach ($mapel as $pelajaran) {
+                $row[] = $rekap[$murid->id]['nilai_mapel'][$pelajaran->id] ?? '';
+            }
+
+            $row[] = $rekap[$murid->id]['total'];
+            $row[] = $rekap[$murid->id]['rata_rata'];
+            $row[] = $peringkat[$murid->id] ?? '';
+            $baris[] = $row;
+        }
+
+        return $this->streamCsv('nilai-akhir-'.$this->namaFileCsv($kelas->nama_kelas).'.csv', $header, $baris);
+    }
+
+    private function unduhCsvKetidakhadiran(Request $request)
+    {
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $kelasId = $request->integer('kelas_id');
+        $kelas = DB::table('kelas')->where('id', $kelasId)->first();
+
+        abort_unless($kelas, 404);
+
+        $siswa = DB::table('siswa')
+            ->where('kelas_id', $kelasId)
+            ->where('status', 'aktif')
+            ->orderBy('nama_siswa')
+            ->get();
+        $kehadiran = DB::table('nilai_kegiatan_tambahan')
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->where('kategori', 'Kehadiran')
+            ->whereIn('siswa_id', $siswa->pluck('id'))
+            ->get()
+            ->keyBy(fn ($item) => $item->siswa_id.'|'.$item->kegiatan);
+        $baris = [];
+
+        foreach ($siswa as $index => $murid) {
+            $sakit = (int) ($kehadiran[$murid->id.'|Sakit']->nilai ?? 0);
+            $izin = (int) ($kehadiran[$murid->id.'|Izin']->nilai ?? 0);
+            $tanpaKeterangan = (int) ($kehadiran[$murid->id.'|Tanpa Keterangan']->nilai ?? 0);
+
+            $baris[] = [
+                $index + 1,
+                $murid->nama_siswa,
+                $kelas->nama_kelas,
+                $sakit,
+                $izin,
+                $tanpaKeterangan,
+                $sakit + $izin + $tanpaKeterangan,
+            ];
+        }
+
+        return $this->streamCsv('ketidakhadiran-'.$this->namaFileCsv($kelas->nama_kelas).'.csv', ['No', 'Nama Siswa', 'Kelas', 'Sakit', 'Izin', 'Tanpa Keterangan', 'Total'], $baris);
     }
 
     public function nilai(Request $request, ?int $mapel = null)
