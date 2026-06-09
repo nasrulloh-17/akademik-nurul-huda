@@ -51,6 +51,15 @@ class GuruController extends Controller
         return ['akses' => 'Anda tidak memiliki hak akses menu ini.'];
     }
 
+    private function stafKeuangan(int $guruId): bool
+    {
+        return DB::table('guru_role')
+            ->where('guru_id', $guruId)
+            ->where('role', 'staff')
+            ->where('staff_jenis', 'staff keuangan')
+            ->exists();
+    }
+
     private function kelasWali(int $guruId)
     {
         return DB::table('guru_role')
@@ -150,12 +159,16 @@ class GuruController extends Controller
         }
 
         foreach ($request->input('nilai', []) as $siswaId => $isi) {
+            $nilaiTugas = $isi['nilai_tugas'] ?? null;
+            $nilaiUts = $isi['nilai_uts'] ?? null;
+            $nilaiUas = $isi['nilai_uas'] ?? null;
+
             DB::table('nilai')->updateOrInsert(
                 ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $mapel, 'tahun_ajaran_id' => $tahunAjaran->id],
                 [
-                    'nilai_tugas' => $isi['nilai_tugas'] ?? 0,
-                    'nilai_uts' => $isi['nilai_uts'] ?? 0,
-                    'nilai_uas' => $isi['nilai_uas'] ?? 0,
+                    'nilai_tugas' => $nilaiTugas === '' ? null : $nilaiTugas,
+                    'nilai_uts' => $nilaiUts === '' ? null : $nilaiUts,
+                    'nilai_uas' => $nilaiUas === '' ? null : $nilaiUas,
                     'catatan_guru' => $isi['catatan_guru'] ?? null,
                     'updated_at' => now(),
                     'created_at' => now(),
@@ -229,7 +242,6 @@ class GuruController extends Controller
         return view('guru.catatan', [
             'siswa' => DB::table('siswa')->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')->select('siswa.*', 'kelas.nama_kelas')->orderBy('nama_siswa')->get(),
             'catatan' => DB::table('catatan_walikelas')->where('guru_id', $guru->id)->latest()->get()->groupBy('siswa_id'),
-            'tagihan' => DB::table('tagihan')->latest()->get()->groupBy('siswa_id'),
         ]);
     }
 
@@ -244,9 +256,6 @@ class GuruController extends Controller
         $data = $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
             'catatan' => 'nullable',
-            'nama_tagihan' => 'nullable',
-            'jumlah' => 'nullable|numeric',
-            'jatuh_tempo' => 'nullable|date',
         ]);
 
         if (! empty($data['catatan'])) {
@@ -259,19 +268,76 @@ class GuruController extends Controller
             ]);
         }
 
-        if (! empty($data['nama_tagihan']) && isset($data['jumlah'])) {
-            DB::table('tagihan')->insert([
-                'siswa_id' => $data['siswa_id'],
-                'nama_tagihan' => $data['nama_tagihan'],
-                'jumlah' => $data['jumlah'],
-                'jatuh_tempo' => $data['jatuh_tempo'] ?? null,
-                'status' => 'belum lunas',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        return back()->with('sukses', 'Catatan berhasil disimpan.');
+    }
+
+    public function administrasi()
+    {
+        $guru = $this->guru();
+
+        if (! $this->stafKeuangan($guru->id)) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
         }
 
-        return back()->with('sukses', 'Catatan atau tagihan berhasil disimpan.');
+        $siswa = DB::table('siswa')
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+            ->where('siswa.status', 'aktif')
+            ->select('siswa.*', 'kelas.nama_kelas')
+            ->orderBy('kelas.nama_kelas')
+            ->orderBy('siswa.nama_siswa')
+            ->get();
+
+        $tagihan = DB::table('tagihan')
+            ->whereIn('nama_tagihan', ['SPP dan Makan', 'Kelengkapan Sekolah', 'Lainnya'])
+            ->get()
+            ->keyBy(fn ($item) => $item->siswa_id.'|'.$item->nama_tagihan);
+
+        return view('guru.administrasi', compact('siswa', 'tagihan'));
+    }
+
+    public function simpanAdministrasi(Request $request)
+    {
+        $guru = $this->guru();
+
+        if (! $this->stafKeuangan($guru->id)) {
+            return back()->withErrors($this->pesanTidakBerhak());
+        }
+
+        $data = $request->validate([
+            'tagihan' => 'array',
+            'tagihan.*.spp_makan' => 'nullable|numeric|min:0',
+            'tagihan.*.kelengkapan' => 'nullable|numeric|min:0',
+            'tagihan.*.lainnya' => 'nullable|numeric|min:0',
+        ]);
+
+        $namaTagihan = [
+            'spp_makan' => 'SPP dan Makan',
+            'kelengkapan' => 'Kelengkapan Sekolah',
+            'lainnya' => 'Lainnya',
+        ];
+        $siswaAktif = DB::table('siswa')->where('status', 'aktif')->pluck('id')->map(fn ($id) => (int) $id)->toArray();
+
+        foreach ($data['tagihan'] ?? [] as $siswaId => $isi) {
+            if (! in_array((int) $siswaId, $siswaAktif, true)) {
+                continue;
+            }
+
+            foreach ($namaTagihan as $kolom => $nama) {
+                $jumlah = max(0, (float) ($isi[$kolom] ?? 0));
+
+                DB::table('tagihan')->updateOrInsert(
+                    ['siswa_id' => $siswaId, 'nama_tagihan' => $nama],
+                    [
+                        'jumlah' => $jumlah,
+                        'status' => 'belum lunas',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            }
+        }
+
+        return back()->with('sukses', 'Tagihan siswa berhasil disimpan.');
     }
 
     public function kegiatanTambahan(Request $request)

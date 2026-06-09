@@ -10,6 +10,13 @@
     ][$jenisPengguna] ?? 'Pengguna';
     $identitasPengguna = session('identitas_pengguna')
         ?? \Illuminate\Support\Facades\DB::table('pengguna')->where('id', session('pengguna_id'))->value('identitas');
+    $guruStafKeuangan = $jenisPengguna === 'guru'
+        && \Illuminate\Support\Facades\DB::table('guru')
+            ->join('guru_role', 'guru_role.guru_id', '=', 'guru.id')
+            ->where('guru.pengguna_id', session('pengguna_id'))
+            ->where('guru_role.role', 'staff')
+            ->where('guru_role.staff_jenis', 'staff keuangan')
+            ->exists();
 @endphp
 
 <div class="shell" data-dashboard-shell>
@@ -43,6 +50,9 @@
                 <a class="{{ request()->routeIs('guru.biodata') ? 'active' : '' }}" href="{{ route('guru.biodata') }}">Biodata</a>
                 <a class="{{ request()->routeIs('guru.nilai') ? 'active' : '' }}" href="{{ route('guru.nilai') }}">Input Nilai</a>
                 <a class="{{ request()->routeIs('guru.kegiatan-tambahan') ? 'active' : '' }}" href="{{ route('guru.kegiatan-tambahan') }}">Kegiatan Tambahan</a>
+                @if($guruStafKeuangan)
+                    <a class="{{ request()->routeIs('guru.administrasi') ? 'active' : '' }}" href="{{ route('guru.administrasi') }}">Administrasi</a>
+                @endif
                 <a class="{{ request()->routeIs('guru.catatan') ? 'active' : '' }}" href="{{ route('guru.catatan') }}">Catatan Walikelas</a>
                 <a class="{{ request()->routeIs('guru.data-siswa') ? 'active' : '' }}" href="{{ route('guru.data-siswa') }}">Data Siswa</a>
             @else

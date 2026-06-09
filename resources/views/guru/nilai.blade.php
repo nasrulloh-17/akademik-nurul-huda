@@ -131,8 +131,13 @@
                         <td>
                             <input
                                 class="nilai-input"
+                                type="number"
+                                inputmode="decimal"
+                                min="0"
+                                max="100"
+                                step="0.01"
                                 name="nilai[{{ $murid->id }}][nilai_tugas]"
-                                value="{{ $n->nilai_tugas ?? 0 }}"
+                                value="{{ $n?->nilai_tugas }}"
                                 data-nilai-tugas
                                 @disabled($aktif->kkm === null)
                             >
@@ -140,8 +145,13 @@
                         <td>
                             <input
                                 class="nilai-input"
+                                type="number"
+                                inputmode="decimal"
+                                min="0"
+                                max="100"
+                                step="0.01"
                                 name="nilai[{{ $murid->id }}][nilai_uts]"
-                                value="{{ $n->nilai_uts ?? 0 }}"
+                                value="{{ $n?->nilai_uts }}"
                                 data-nilai-uts
                                 @disabled($aktif->kkm === null)
                             >
@@ -149,8 +159,13 @@
                         <td>
                             <input
                                 class="nilai-input"
+                                type="number"
+                                inputmode="decimal"
+                                min="0"
+                                max="100"
+                                step="0.01"
                                 name="nilai[{{ $murid->id }}][nilai_uas]"
-                                value="{{ $n->nilai_uas ?? 0 }}"
+                                value="{{ $n?->nilai_uas }}"
                                 data-nilai-uas
                                 @disabled($aktif->kkm === null)
                             >
@@ -192,6 +207,13 @@
         }
 
         const hitungNilaiAkhir = () => {
+            if (nilaiTugas.value === '' || nilaiUts.value === '' || nilaiUas.value === '') {
+                nilaiAkhir.value = '';
+                nilaiAkhir.style.color = '';
+                nilaiAkhir.style.fontWeight = '';
+                return;
+            }
+
             const tugas = parseFloat(nilaiTugas.value) || 0;
             const uts = parseFloat(nilaiUts.value) || 0;
             const uas = parseFloat(nilaiUas.value) || 0;

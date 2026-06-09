@@ -37,10 +37,17 @@ class SiswaController extends Controller
     public function dashboard()
     {
         $siswa = $this->siswa();
+        $tagihan = DB::table('tagihan')
+            ->where('siswa_id', $siswa->id)
+            ->whereIn('nama_tagihan', ['SPP dan Makan', 'Kelengkapan Sekolah', 'Lainnya'])
+            ->get()
+            ->keyBy('nama_tagihan');
+
         return view('siswa.dashboard', [
             'siswa' => $siswa,
             'totalNilai' => DB::table('nilai')->where('siswa_id', $siswa->id)->count(),
             'totalTagihan' => DB::table('tagihan')->where('siswa_id', $siswa->id)->where('status', 'belum lunas')->sum('jumlah'),
+            'tagihanAdministrasi' => $tagihan,
         ]);
     }
 
