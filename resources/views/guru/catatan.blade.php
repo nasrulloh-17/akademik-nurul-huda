@@ -3,6 +3,11 @@
 @section('judul_halaman', 'Catatan Walikelas')
 
 @section('konten')
+<div class="card">
+    <strong>Periode aktif:</strong>
+    {{ $tahunAjaran->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaran->semester ?? 'ganjil') }}
+</div>
+
 <form class="card" method="post" action="{{ route('guru.catatan.simpan') }}">
     @csrf
 

@@ -162,6 +162,14 @@
             line-height: 1.25;
         }
 
+        .brand-subtitle {
+            margin: 0;
+            color: rgba(255, 255, 255, .9);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
         .role-badge {
             display: inline-flex;
             width: fit-content;
@@ -221,7 +229,7 @@
             justify-content: center;
         }
 
-        .menu-collapsed .brand,
+        .menu-collapsed .brand-wrap,
         .menu-collapsed .role-badge,
         .menu-collapsed .menu {
             display: none;
@@ -317,6 +325,10 @@
                 font-size: 18px;
             }
 
+            .brand-subtitle {
+                font-size: 11px;
+            }
+
             .role-badge {
                 margin: 12px 0 0;
             }
@@ -333,7 +345,7 @@
                 justify-content: space-between;
             }
 
-            .menu-collapsed .brand {
+            .menu-collapsed .brand-wrap {
                 display: block;
             }
 

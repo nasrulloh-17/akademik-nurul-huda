@@ -473,6 +473,7 @@ class GuruController extends Controller
     public function catatan()
     {
         $guru = $this->guru();
+        $tahunAjaran = $this->tahunAjaranAktif();
 
         if (! DB::table('guru_role')->where('guru_id', $guru->id)->where('role', 'wali kelas')->exists()) {
             return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
@@ -480,13 +481,20 @@ class GuruController extends Controller
 
         return view('guru.catatan', [
             'siswa' => DB::table('siswa')->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')->select('siswa.*', 'kelas.nama_kelas')->orderBy('nama_siswa')->get(),
-            'catatan' => DB::table('catatan_walikelas')->where('guru_id', $guru->id)->latest()->get()->groupBy('siswa_id'),
+            'catatan' => DB::table('catatan_walikelas')
+                ->where('guru_id', $guru->id)
+                ->where('tahun_ajaran_id', $tahunAjaran->id)
+                ->latest()
+                ->get()
+                ->groupBy('siswa_id'),
+            'tahunAjaran' => $tahunAjaran,
         ]);
     }
 
     public function simpanCatatan(Request $request)
     {
         $guru = $this->guru();
+        $tahunAjaran = $this->tahunAjaranAktif();
 
         if (! DB::table('guru_role')->where('guru_id', $guru->id)->where('role', 'wali kelas')->exists()) {
             return back()->withErrors($this->pesanTidakBerhak());
@@ -498,13 +506,15 @@ class GuruController extends Controller
         ]);
 
         if (! empty($data['catatan'])) {
-            DB::table('catatan_walikelas')->insert([
-                'siswa_id' => $data['siswa_id'],
-                'guru_id' => $guru->id,
-                'catatan' => $data['catatan'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            DB::table('catatan_walikelas')->updateOrInsert(
+                ['siswa_id' => $data['siswa_id'], 'tahun_ajaran_id' => $tahunAjaran->id],
+                [
+                    'guru_id' => $guru->id,
+                    'catatan' => $data['catatan'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
         }
 
         return back()->with('sukses', 'Catatan berhasil disimpan.');
@@ -690,6 +700,11 @@ class GuruController extends Controller
             ->values();
         $peringkat = $peringkatKelas->search(fn ($item) => (int) $item->id === (int) $siswa->id);
         $dataPeringkat = $peringkat === false ? null : $peringkatKelas[$peringkat];
+        $catatanWaliKelas = DB::table('catatan_walikelas')
+            ->where('siswa_id', $siswa->id)
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->latest()
+            ->first();
 
         return view('guru.cetak-raport', [
             'guru' => $guru,
@@ -702,6 +717,7 @@ class GuruController extends Controller
             'namaSekolah' => $pakaiMts ? "MTs Ma'arif 20" : 'SMA Nurul Huda',
             'kepalaSekolah' => $pakaiMts ? ($dataSekolah->kepala_mts ?? null) : ($dataSekolah->kepala_sma ?? null),
             'alamatSekolah' => $dataSekolah->alamat ?? null,
+            'catatanWaliKelas' => $catatanWaliKelas,
         ]);
     }
 

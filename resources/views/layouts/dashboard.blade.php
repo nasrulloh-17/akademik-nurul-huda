@@ -22,8 +22,10 @@
 <div class="shell" data-dashboard-shell>
     <aside class="side">
         <div class="side-head">
-            <div class="brand">SIAKAD</div>
-
+            <div class="brand-wrap">
+                <div class="brand">NGAOS</div>
+                <p class="brand-subtitle">Nurul Huda Gateway Akademik dan Operasional Sekolah</p>
+            </div>
             <button class="menu-toggle" type="button" data-menu-toggle aria-expanded="true" aria-label="Tutup menu">
                 &times;
             </button>

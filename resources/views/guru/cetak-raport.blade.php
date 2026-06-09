@@ -117,7 +117,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 18px;
-            margin-top: 14px;
+            margin-top: 6px;
         }
 
         .signature-box {
@@ -131,6 +131,16 @@
         .note {
             font-size: 10pt;
             margin-top: 4px;
+        }
+
+        .wali-note {
+            margin-top: 14px;
+            font-weight: 700;
+        }
+
+        .print-date {
+            margin-top: 14px;
+            text-align: right;
         }
 
         @media print {
@@ -371,6 +381,11 @@
 
                 <table>
                     <tr>
+                        <th>Keterangan</th>
+                        <th style="width:70px">Jumlah</th>
+                        <th style="width:55px">Satuan</th>
+                    </tr>
+                    <tr>
                         <td>Sakit</td>
                         <td class="center" style="width:70px">{{ $kehadiran['Sakit']->nilai ?? 0 }}</td>
                         <td class="center" style="width:55px">hari</td>
@@ -389,6 +404,12 @@
             </section>
         </div>
 
+        <div class="wali-note">
+            Catatan walikelas: {{ $catatanWaliKelas->catatan ?? '-' }}
+        </div>
+
+        <div class="print-date">Labuhan Maringgai, {{ $tanggalCetak }}</div>
+
         <div class="signature">
             <div class="signature-box">
                 <div>Orang Tua/Wali,</div>
@@ -403,9 +424,7 @@
             </div>
 
             <div class="signature-box">
-                <div>Labuhan Maringgai, {{ $tanggalCetak }}</div>
-                <div>Mengetahui,</div>
-                <div>Kepala Sekolah</div>
+                <div>Kepala Sekolah,</div>
                 <div class="signature-space"></div>
                 <strong>{{ $kepalaSekolah ?? '-' }}</strong>
             </div>

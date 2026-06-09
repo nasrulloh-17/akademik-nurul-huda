@@ -711,6 +711,7 @@ class AdminController extends Controller
         $this->jaga();
         $data = $request->validate([
             'nama_mata_pelajaran' => 'required',
+            'jenis_pelajaran' => 'required|in:Formal,Non formal',
             'kelas_id' => 'nullable|exists:kelas,id',
             'guru_id' => 'nullable|exists:guru,id',
             'keterangan' => 'nullable',
@@ -726,6 +727,7 @@ class AdminController extends Controller
         $this->jaga();
         $data = $request->validate([
             'nama_mata_pelajaran' => 'required',
+            'jenis_pelajaran' => 'required|in:Formal,Non formal',
             'kelas_id' => 'nullable|exists:kelas,id',
             'guru_id' => 'nullable|exists:guru,id',
         ]);

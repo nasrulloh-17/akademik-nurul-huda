@@ -9,6 +9,11 @@
     <div class="form-grid">
         <input name="nama_mata_pelajaran" placeholder="Nama Mata Pelajaran" required>
 
+        <select name="jenis_pelajaran" required>
+            <option value="Formal">Formal</option>
+            <option value="Non formal">Non formal</option>
+        </select>
+
         <select name="kelas_id">
             <option value="">Pilih Kelas</option>
             @foreach($kelas as $item)
@@ -30,6 +35,7 @@
 <table>
     <tr>
         <th>Nama Mata Pelajaran</th>
+        <th>Jenis Pelajaran</th>
         <th>Kelas</th>
         <th>Guru Pengampu</th>
         <th>Ubah</th>
@@ -43,6 +49,12 @@
                     @csrf
                 </form>
                 <input form="ubah-mapel-{{ $m->id }}" name="nama_mata_pelajaran" value="{{ $m->nama_mata_pelajaran }}" required>
+            </td>
+            <td>
+                <select form="ubah-mapel-{{ $m->id }}" name="jenis_pelajaran" required>
+                    <option value="Formal" @selected(($m->jenis_pelajaran ?? 'Formal') === 'Formal')>Formal</option>
+                    <option value="Non formal" @selected(($m->jenis_pelajaran ?? 'Formal') === 'Non formal')>Non formal</option>
+                </select>
             </td>
             <td>
                 <select form="ubah-mapel-{{ $m->id }}" name="kelas_id">

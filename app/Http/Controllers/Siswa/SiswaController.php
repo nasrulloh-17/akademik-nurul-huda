@@ -48,6 +48,11 @@ class SiswaController extends Controller
             'totalNilai' => DB::table('nilai')->where('siswa_id', $siswa->id)->count(),
             'totalTagihan' => DB::table('tagihan')->where('siswa_id', $siswa->id)->where('status', 'belum lunas')->sum('jumlah'),
             'tagihanAdministrasi' => $tagihan,
+            'catatanWaliKelas' => DB::table('catatan_walikelas')
+                ->where('siswa_id', $siswa->id)
+                ->where('tahun_ajaran_id', $this->tahunAjaranAktif()->id)
+                ->latest()
+                ->first(),
         ]);
     }
 
@@ -125,6 +130,14 @@ class SiswaController extends Controller
         $kegiatanPerTahun = $kegiatanTambahan
             ->groupBy($labelPeriode)
             ->map(fn ($items) => $items->groupBy('kategori'));
+        $catatan = DB::table('catatan_walikelas')
+            ->leftJoin('tahun_ajaran', 'tahun_ajaran.id', '=', 'catatan_walikelas.tahun_ajaran_id')
+            ->where('catatan_walikelas.siswa_id', $siswa->id)
+            ->select('catatan_walikelas.*', 'tahun_ajaran.nama_tahun_ajaran', 'tahun_ajaran.semester')
+            ->orderByDesc('tahun_ajaran.id')
+            ->latest('catatan_walikelas.updated_at')
+            ->get();
+        $catatanPerTahun = $catatan->groupBy($labelPeriode);
         $peringkatKelas = DB::table('siswa')
             ->leftJoin('nilai', function ($join) use ($tahunAjaran) {
                 $join->on('nilai.siswa_id', '=', 'siswa.id')
@@ -153,10 +166,11 @@ class SiswaController extends Controller
             'nilaiPerTahun' => $nilaiPerTahun,
             'kegiatanTambahan' => $kegiatanTambahan,
             'kegiatanPerTahun' => $kegiatanPerTahun,
-            'tahunRaport' => $nilaiPerTahun->keys()->merge($kegiatanPerTahun->keys())->unique(),
+            'catatanPerTahun' => $catatanPerTahun,
+            'tahunRaport' => $nilaiPerTahun->keys()->merge($kegiatanPerTahun->keys())->merge($catatanPerTahun->keys())->unique(),
             'peringkat' => $dataPeringkat && $dataPeringkat->rata_rata_raport !== null ? $peringkat + 1 : null,
             'jumlahSiswaKelas' => $peringkatKelas->count(),
-            'catatan' => DB::table('catatan_walikelas')->where('siswa_id', $siswa->id)->latest()->get(),
+            'catatan' => $catatan,
         ];
     }
 

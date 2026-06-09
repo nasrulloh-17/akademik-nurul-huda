@@ -75,16 +75,27 @@
                 </table>
             @endforeach
         @endif
+
+        @if(isset($catatanPerTahun[$tahun]))
+            <h4>Catatan Walikelas Tahun Ajaran {{ $tahun }}</h4>
+
+            @foreach($catatanPerTahun[$tahun] as $c)
+                <p><strong>Catatan walikelas:</strong> {{ $c->catatan }}</p>
+            @endforeach
+        @endif
     @empty
         <p>Belum ada nilai yang tersimpan.</p>
     @endforelse
 </div>
 
 <div class="card">
-    <h3>Catatan Walikelas</h3>
+    <h3>Riwayat Catatan Walikelas</h3>
 
     @forelse($catatan as $c)
-        <p>{{ $c->catatan }}</p>
+        <p>
+            <strong>{{ $c->nama_tahun_ajaran ?? 'Tanpa Tahun Ajaran' }} - {{ ucfirst($c->semester ?? 'ganjil') }}:</strong>
+            {{ $c->catatan }}
+        </p>
     @empty
         <p>Belum ada catatan.</p>
     @endforelse

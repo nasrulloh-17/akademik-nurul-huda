@@ -21,6 +21,11 @@
 </div>
 
 <div class="card">
+    <h3>Catatan Walikelas</h3>
+    <p><strong>Catatan walikelas: {{ $catatanWaliKelas->catatan ?? '-' }}</strong></p>
+</div>
+
+<div class="card">
     <h3>Rincian Tagihan</h3>
 
     @php
