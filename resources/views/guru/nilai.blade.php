@@ -122,7 +122,9 @@
                 </tr>
 
                 @foreach($siswa as $murid)
-                    @php($n = $nilai[$murid->id] ?? null)
+                    @php
+                        $n = $nilai[$murid->id] ?? null;
+                    @endphp
 
                     <tr>
                         <td class="nilai-hide-mobile">{{ $murid->nis }}</td>

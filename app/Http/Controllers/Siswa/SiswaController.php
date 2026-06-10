@@ -34,6 +34,23 @@ class SiswaController extends Controller
         return DB::table('siswa')->where('pengguna_id', session('pengguna_id'))->first();
     }
 
+    private function infoDiniyah($siswa): array
+    {
+        $tingkat = (int) ($siswa->tingkat ?: preg_replace('/\D+/', '', (string) $siswa->nama_kelas));
+        $jenjang = $tingkat >= 10 ? 'WUSTHO' : 'ULA';
+        $kelasDiniyah = match ($tingkat) {
+            7 => '1 ULA',
+            8 => '2 ULA',
+            9 => '3 ULA',
+            10 => '1 WUSTHO',
+            11 => '2 WUSTHO',
+            12 => '3 WUSTHO',
+            default => $siswa->nama_kelas,
+        };
+
+        return compact('jenjang', 'kelasDiniyah');
+    }
+
     public function dashboard()
     {
         $siswa = $this->siswa();
@@ -97,6 +114,54 @@ class SiswaController extends Controller
         return view('siswa.cetak-raport', $this->dataRaport($request));
     }
 
+    public function cetakRaportDiniyah(Request $request)
+    {
+        $siswaLogin = $this->siswa();
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $siswa = DB::table('siswa')
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+            ->select('siswa.*', 'kelas.nama_kelas', 'kelas.tingkat')
+            ->where('siswa.id', $siswaLogin->id)
+            ->first();
+        $tahunAjaranId = $request->integer('tahun_ajaran_id') ?: $tahunAjaran->id;
+        $periode = DB::table('tahun_ajaran')->where('id', $tahunAjaranId)->first() ?: $tahunAjaran;
+        $nilai = DB::table('mata_pelajaran')
+            ->leftJoin('nilai', function ($join) use ($siswa, $periode) {
+                $join->on('nilai.mata_pelajaran_id', '=', 'mata_pelajaran.id')
+                    ->where('nilai.siswa_id', $siswa->id)
+                    ->where('nilai.tahun_ajaran_id', $periode->id);
+            })
+            ->where(function ($query) use ($siswa) {
+                $query->where('mata_pelajaran.kelas_id', $siswa->kelas_id)
+                    ->orWhereNull('mata_pelajaran.kelas_id');
+            })
+            ->where('mata_pelajaran.jenis_pelajaran', 'Non formal')
+            ->select(
+                'mata_pelajaran.id',
+                'mata_pelajaran.nama_mata_pelajaran',
+                'nilai.nilai_tugas',
+                'nilai.nilai_uts',
+                'nilai.nilai_uas',
+                'nilai.catatan_guru'
+            )
+            ->orderBy('mata_pelajaran.nama_mata_pelajaran')
+            ->get();
+        $waliKelas = DB::table('guru')
+            ->join('guru_role', 'guru_role.guru_id', '=', 'guru.id')
+            ->where('guru_role.role', 'wali kelas')
+            ->where('guru_role.kelas_id', $siswa->kelas_id)
+            ->select('guru.nama_guru')
+            ->first();
+
+        return view('guru.cetak-raport-diniyah', array_merge([
+            'guru' => null,
+            'waliKelas' => $waliKelas,
+            'siswa' => $siswa,
+            'tahunAjaran' => $periode,
+            'nilai' => $nilai,
+        ], $this->infoDiniyah($siswa)));
+    }
+
     private function dataRaport(Request $request): array
     {
         $siswa = $this->siswa();
@@ -113,6 +178,7 @@ class SiswaController extends Controller
             ->leftJoin('tahun_ajaran', 'tahun_ajaran.id', '=', 'nilai.tahun_ajaran_id')
             ->where('nilai.siswa_id', $siswa->id)
             ->when($tahunAjaranFilter, fn ($query) => $query->where('nilai.tahun_ajaran_id', $tahunAjaranFilter->id))
+            ->where('mata_pelajaran.jenis_pelajaran', 'Formal')
             ->select(
                 'nilai.*',
                 'mata_pelajaran.nama_mata_pelajaran',
@@ -152,8 +218,13 @@ class SiswaController extends Controller
                 $join->on('nilai.siswa_id', '=', 'siswa.id')
                     ->where('nilai.tahun_ajaran_id', $tahunAjaranPeringkat->id);
             })
+            ->leftJoin('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')
             ->where('siswa.kelas_id', $siswa->kelas_id)
             ->where('siswa.status', 'aktif')
+            ->where(function ($query) {
+                $query->where('mata_pelajaran.jenis_pelajaran', 'Formal')
+                    ->orWhereNull('mata_pelajaran.id');
+            })
             ->select(
                 'siswa.id',
                 DB::raw('AVG((nilai.nilai_tugas * 0.3) + (nilai.nilai_uts * 0.3) + (nilai.nilai_uas * 0.4)) as rata_rata_raport')

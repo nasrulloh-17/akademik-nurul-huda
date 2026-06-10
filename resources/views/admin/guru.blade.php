@@ -112,10 +112,12 @@
     </tr>
 
     @foreach($guru as $item)
-        @php($roleItems = $roles[$item->id] ?? collect())
-        @php($roleNames = $roleItems->pluck('role')->toArray())
-        @php($waliRole = $roleItems->firstWhere('role', 'wali kelas'))
-        @php($staffRole = $roleItems->firstWhere('role', 'staff'))
+        @php
+            $roleItems = $roles[$item->id] ?? collect();
+            $roleNames = $roleItems->pluck('role')->toArray();
+            $waliRole = $roleItems->firstWhere('role', 'wali kelas');
+            $staffRole = $roleItems->firstWhere('role', 'staff');
+        @endphp
 
         <tr>
             <td>{{ $item->id_guru }}</td>

@@ -101,6 +101,23 @@ class GuruController extends Controller
         return (int) round(($nilai->nilai_tugas * 0.3) + ($nilai->nilai_uts * 0.3) + ($nilai->nilai_uas * 0.4));
     }
 
+    private function infoDiniyah($siswa): array
+    {
+        $tingkat = (int) ($siswa->tingkat ?: preg_replace('/\D+/', '', (string) $siswa->nama_kelas));
+        $jenjang = $tingkat >= 10 ? 'WUSTHO' : 'ULA';
+        $kelasDiniyah = match ($tingkat) {
+            7 => '1 ULA',
+            8 => '2 ULA',
+            9 => '3 ULA',
+            10 => '1 WUSTHO',
+            11 => '2 WUSTHO',
+            12 => '3 WUSTHO',
+            default => $siswa->nama_kelas,
+        };
+
+        return compact('jenjang', 'kelasDiniyah');
+    }
+
     private function nilaiKosongAtauValid($nilai): bool
     {
         return $nilai === null || $nilai === '' || (is_numeric($nilai) && $nilai >= 0 && $nilai <= 100);
@@ -669,6 +686,7 @@ class GuruController extends Controller
                 $query->where('mata_pelajaran.kelas_id', $siswa->kelas_id)
                     ->orWhereNull('mata_pelajaran.kelas_id');
             })
+            ->where('mata_pelajaran.jenis_pelajaran', 'Formal')
             ->select(
                 'mata_pelajaran.id',
                 'mata_pelajaran.nama_mata_pelajaran',
@@ -694,8 +712,13 @@ class GuruController extends Controller
                 $join->on('nilai.siswa_id', '=', 'siswa.id')
                     ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
             })
+            ->leftJoin('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')
             ->where('siswa.kelas_id', $siswa->kelas_id)
             ->where('siswa.status', 'aktif')
+            ->where(function ($query) {
+                $query->where('mata_pelajaran.jenis_pelajaran', 'Formal')
+                    ->orWhereNull('mata_pelajaran.id');
+            })
             ->select(
                 'siswa.id',
                 DB::raw('AVG((nilai.nilai_tugas * 0.3) + (nilai.nilai_uts * 0.3) + (nilai.nilai_uas * 0.4)) as rata_rata_raport')
@@ -730,6 +753,54 @@ class GuruController extends Controller
         ]);
     }
 
+    public function cetakRaportDiniyah(int $siswaId)
+    {
+        $guru = $this->guru();
+        $kelasWali = $this->kelasWali($guru->id);
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $siswa = DB::table('siswa')
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+            ->select('siswa.*', 'kelas.nama_kelas', 'kelas.tingkat')
+            ->where('siswa.id', $siswaId)
+            ->first();
+
+        abort_unless($siswa, 404);
+
+        if (! $kelasWali->contains('id', $siswa->kelas_id)) {
+            return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
+        }
+
+        $nilai = DB::table('mata_pelajaran')
+            ->leftJoin('nilai', function ($join) use ($siswa, $tahunAjaran) {
+                $join->on('nilai.mata_pelajaran_id', '=', 'mata_pelajaran.id')
+                    ->where('nilai.siswa_id', $siswa->id)
+                    ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
+            })
+            ->where(function ($query) use ($siswa) {
+                $query->where('mata_pelajaran.kelas_id', $siswa->kelas_id)
+                    ->orWhereNull('mata_pelajaran.kelas_id');
+            })
+            ->where('mata_pelajaran.jenis_pelajaran', 'Non formal')
+            ->select(
+                'mata_pelajaran.id',
+                'mata_pelajaran.nama_mata_pelajaran',
+                'nilai.nilai_tugas',
+                'nilai.nilai_uts',
+                'nilai.nilai_uas',
+                'nilai.catatan_guru'
+            )
+            ->orderBy('mata_pelajaran.nama_mata_pelajaran')
+            ->get();
+
+        return view('guru.cetak-raport-diniyah', array_merge([
+            'guru' => $guru,
+            'waliKelas' => $guru,
+            'siswa' => $siswa,
+            'tahunAjaran' => $tahunAjaran,
+            'nilai' => $nilai,
+        ], $this->infoDiniyah($siswa)));
+    }
+
     public function rekapRaport(Request $request)
     {
         $guru = $this->guru();
@@ -753,6 +824,7 @@ class GuruController extends Controller
             ->get();
         $mapel = DB::table('mata_pelajaran')
             ->where(fn ($query) => $query->where('kelas_id', $kelasAktif)->orWhereNull('kelas_id'))
+            ->where('jenis_pelajaran', 'Formal')
             ->orderBy('nama_mata_pelajaran')
             ->get();
         $nilai = DB::table('nilai')

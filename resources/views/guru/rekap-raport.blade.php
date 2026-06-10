@@ -52,9 +52,14 @@
                 <td>{{ $jumlahKegiatan }}/{{ $jumlahKegiatanMinimal }}</td>
                 <td>{{ isset($catatan[$murid->id]) ? 'Ada' : 'Belum ada' }}</td>
                 <td>
-                    <a class="btn alt" href="{{ route('guru.raport.cetak', $murid->id) }}" target="_blank">
-                        Cetak
-                    </a>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                        <a class="btn alt" href="{{ route('guru.raport.cetak', $murid->id) }}" target="_blank">
+                            Raport Formal
+                        </a>
+                        <a class="btn alt" href="{{ route('guru.raport-diniyah.cetak', $murid->id) }}" target="_blank">
+                            Raport Diniyah
+                        </a>
+                    </div>
                 </td>
             </tr>
         @endforeach

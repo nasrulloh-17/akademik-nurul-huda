@@ -18,7 +18,11 @@
             <button class="btn">Tampilkan</button>
 
             <a class="btn alt" href="{{ route('siswa.raport.cetak', request()->only('tahun_ajaran_id')) }}" target="_blank">
-                Cetak Nilai ke PDF
+                Raport Formal
+            </a>
+
+            <a class="btn alt" href="{{ route('siswa.raport-diniyah.cetak', request()->only('tahun_ajaran_id')) }}" target="_blank">
+                Raport Diniyah
             </a>
         </div>
     </form>
@@ -32,7 +36,9 @@
     </p>
 
     @forelse($tahunRaport as $tahun)
-        @php($nilaiTahun = $nilaiPerTahun[$tahun] ?? collect())
+        @php
+            $nilaiTahun = $nilaiPerTahun[$tahun] ?? collect();
+        @endphp
 
         <h4>Tahun Ajaran {{ $tahun }}</h4>
 
@@ -50,8 +56,10 @@
                 </tr>
 
                 @foreach($nilaiTahun as $n)
-                    @php($nilaiAkhir = ($n->nilai_tugas * 0.3) + ($n->nilai_uts * 0.3) + ($n->nilai_uas * 0.4))
-                    @php($belumTuntas = $n->kkm !== null && $nilaiAkhir < $n->kkm)
+                    @php
+                        $nilaiAkhir = ($n->nilai_tugas * 0.3) + ($n->nilai_uts * 0.3) + ($n->nilai_uas * 0.4);
+                        $belumTuntas = $n->kkm !== null && $nilaiAkhir < $n->kkm;
+                    @endphp
 
                     <tr>
                         <td>{{ $n->nama_mata_pelajaran }}</td>

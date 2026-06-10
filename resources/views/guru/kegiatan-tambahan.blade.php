@@ -102,8 +102,10 @@
                                     </td>
 
                                     @foreach($kegiatanList as $kegiatan)
-                                        @php($nilaiKey = $murid->id.'|'.$kategori.'|'.$kegiatan)
-                                        @php($nilaiAktif = $nilai[$nilaiKey]->nilai ?? '')
+                                        @php
+                                            $nilaiKey = $murid->id.'|'.$kategori.'|'.$kegiatan;
+                                            $nilaiAktif = $nilai[$nilaiKey]->nilai ?? '';
+                                        @endphp
 
                                         <td>
                                             @if($kategori === 'Kehadiran')

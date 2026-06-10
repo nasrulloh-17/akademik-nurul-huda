@@ -84,6 +84,7 @@ Route::prefix('guru')->name('guru.')->group(function () {
     Route::get('/download-csv/{jenis}', [GuruController::class, 'unduhCsv'])->name('download-csv.unduh');
     Route::get('/rekap-raport', [GuruController::class, 'rekapRaport'])->name('rekap-raport');
     Route::get('/raport/{siswa}/cetak', [GuruController::class, 'cetakRaportSiswa'])->name('raport.cetak');
+    Route::get('/raport/{siswa}/cetak-diniyah', [GuruController::class, 'cetakRaportDiniyah'])->name('raport-diniyah.cetak');
     Route::get('/catatan-walikelas', [GuruController::class, 'catatan'])->name('catatan');
     Route::post('/catatan-walikelas', [GuruController::class, 'simpanCatatan'])->name('catatan.simpan');
     Route::get('/data-siswa', [GuruController::class, 'dataSiswa'])->name('data-siswa');
@@ -95,5 +96,6 @@ Route::prefix('siswa')->name('siswa.')->group(function () {
     Route::post('/biodata', [SiswaController::class, 'simpanBiodata'])->name('biodata.simpan');
     Route::get('/raport', [SiswaController::class, 'raport'])->name('raport');
     Route::get('/raport/cetak', [SiswaController::class, 'cetakRaport'])->name('raport.cetak');
+    Route::get('/raport-diniyah/cetak', [SiswaController::class, 'cetakRaportDiniyah'])->name('raport-diniyah.cetak');
     Route::get('/tagihan', [SiswaController::class, 'tagihan'])->name('tagihan');
 });
