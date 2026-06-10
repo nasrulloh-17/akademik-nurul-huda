@@ -9,14 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('mata_pelajaran', function (Blueprint $table) {
-            $table->foreignId('kelas_id')->nullable()->after('id')->constrained('kelas')->nullOnDelete();
+            if (! Schema::hasColumn('mata_pelajaran', 'kelas_id')) {
+                $table->foreignId('kelas_id')->nullable()->after('id')->constrained('kelas')->nullOnDelete();
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('mata_pelajaran', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('kelas_id');
+            if (Schema::hasColumn('mata_pelajaran', 'kelas_id')) {
+                $table->dropConstrainedForeignId('kelas_id');
+            }
         });
     }
 };
