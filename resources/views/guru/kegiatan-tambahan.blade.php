@@ -3,6 +3,10 @@
 @section('judul_halaman', 'Input Nilai Kegiatan Tambahan')
 
 @section('konten')
+@php
+    $periodeAktif = (bool) ($tahunAjaran->aktif ?? false);
+@endphp
+
 <style>
     .kegiatan-table {
         min-width: 760px;
@@ -51,8 +55,19 @@
                 Kelas Wali
                 <select name="kelas_id" required>
                     @foreach($kelasWali as $kelas)
-                        <option value="{{ $kelas->id }}" @selected((int) $kelasAktif === $kelas->id)>
+                        <option value="{{ $kelas->id }}" @selected((int) $kelasAktif === (int) $kelas->id)>
                             {{ $kelas->nama_kelas }}
+                        </option>
+                    @endforeach
+                </select>
+            </label>
+
+            <label>
+                Tahun Ajaran/Semester
+                <select name="tahun_ajaran_id" required>
+                    @foreach($daftarTahunAjaran as $periode)
+                        <option value="{{ $periode->id }}" @selected((int) $tahunAjaran->id === (int) $periode->id)>
+                            {{ $periode->nama_tahun_ajaran }} - {{ ucfirst($periode->semester ?? 'ganjil') }}
                         </option>
                     @endforeach
                 </select>
@@ -63,25 +78,27 @@
     </form>
 </div>
 
-<form method="post" action="{{ route('guru.kegiatan-tambahan.simpan') }}">
-    @csrf
-
-    <input type="hidden" name="kelas_id" value="{{ $kelasAktif }}">
-
-    <div class="card">
-        <h3>Nilai Kegiatan Tambahan</h3>
-        <p class="muted">
-            Tahun ajaran aktif:
-            {{ $tahunAjaran->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaran->semester ?? 'ganjil') }}
+<div class="card">
+    <h3>Nilai Kegiatan Tambahan</h3>
+    <p class="muted">
+        Periode:
+        {{ $tahunAjaran->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaran->semester ?? 'ganjil') }}
+    </p>
+    @unless($periodeAktif)
+        <p class="muted" style="color:#dc3545">
+            Nilai kegiatan tambahan periode lama hanya bisa dilihat, tidak bisa diubah.
         </p>
+    @endunless
 
-        @if($siswa->isNotEmpty())
-            <div style="overflow-x:auto;margin-bottom:24px">
+    @if($siswa->isNotEmpty())
+        @foreach($kegiatanTambahan as $kategori => $kegiatanList)
+            <form method="post" action="{{ route('guru.kegiatan-tambahan.simpan') }}" style="margin-bottom:24px">
+                @csrf
 
-            </div>
+                <input type="hidden" name="kelas_id" value="{{ $kelasAktif }}">
+                <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunAjaran->id }}">
 
-            @foreach($kegiatanTambahan as $kategori => $kegiatanList)
-                <section style="margin-bottom:24px">
+                <section>
                     <h4>{{ $kategori }}</h4>
 
                     <div style="overflow-x:auto">
@@ -105,6 +122,8 @@
                                         @php
                                             $nilaiKey = $murid->id.'|'.$kategori.'|'.$kegiatan;
                                             $nilaiAktif = $nilai[$nilaiKey]->nilai ?? '';
+                                            $kategoriInputKey = $kegiatanTambahanKeys[$kategori]['key'];
+                                            $kegiatanInputKey = $kegiatanTambahanKeys[$kategori]['kegiatan'][$kegiatan];
                                         @endphp
 
                                         <td>
@@ -112,15 +131,17 @@
                                                 <input
                                                     type="number"
                                                     min="0"
-                                                    name="nilai[{{ $murid->id }}][{{ $kategori }}][{{ $kegiatan }}]"
+                                                    name="nilai[{{ $murid->id }}][{{ $kategoriInputKey }}][{{ $kegiatanInputKey }}]"
                                                     value="{{ $nilaiAktif }}"
                                                     placeholder="0"
                                                     style="min-width:86px"
+                                                    @disabled(! $periodeAktif)
                                                 >
                                             @else
                                                 <select
-                                                    name="nilai[{{ $murid->id }}][{{ $kategori }}][{{ $kegiatan }}]"
+                                                    name="nilai[{{ $murid->id }}][{{ $kategoriInputKey }}][{{ $kegiatanInputKey }}]"
                                                     style="min-width:150px"
+                                                    @disabled(! $periodeAktif)
                                                 >
                                                     <option value="">Pilih</option>
                                                     @foreach($nilaiKegiatanTambahan[$kategori] as $opsi)
@@ -136,13 +157,21 @@
                             @endforeach
                         </table>
                     </div>
-                </section>
-            @endforeach
 
-            <button class="btn">Simpan Nilai Kegiatan Tambahan</button>
-        @else
-            <p>Belum ada siswa aktif pada kelas ini.</p>
-        @endif
-    </div>
-</form>
+                    @if($periodeAktif)
+                        <button class="btn" type="submit" style="margin-top:14px">
+                            Simpan {{ $kategori }}
+                        </button>
+                    @else
+                        <button class="btn" type="button" disabled style="margin-top:14px">
+                            Periode Lama Tidak Bisa Diubah
+                        </button>
+                    @endif
+                </section>
+            </form>
+        @endforeach
+    @else
+        <p>Belum ada siswa aktif pada kelas ini.</p>
+    @endif
+</div>
 @endsection

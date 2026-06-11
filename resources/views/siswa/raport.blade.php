@@ -31,7 +31,7 @@
 <div class="card">
     <h3>{{ $siswa->nama_siswa }} - {{ $siswa->nama_kelas }}</h3>
     <p class="muted">
-        Peringkat kelas periode aktif {{ $tahunAjaranAktif->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaranAktif->semester ?? 'ganjil') }}:
+        Peringkat kelas periode {{ ($tahunAjaranFilter ?: $tahunAjaranAktif)->nama_tahun_ajaran }} - {{ ucfirst(($tahunAjaranFilter ?: $tahunAjaranAktif)->semester ?? 'ganjil') }}:
         {{ $peringkat ? $peringkat.' dari '.$jumlahSiswaKelas.' siswa' : 'Belum tersedia' }}
     </p>
 

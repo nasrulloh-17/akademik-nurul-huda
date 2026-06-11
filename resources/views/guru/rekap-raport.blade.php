@@ -8,8 +8,16 @@
         <div class="form-grid">
             <select name="kelas_id" required>
                 @foreach($kelasWali as $kelas)
-                    <option value="{{ $kelas->id }}" @selected((int) $kelasAktif === $kelas->id)>
+                    <option value="{{ $kelas->id }}" @selected((int) $kelasAktif === (int) $kelas->id)>
                         {{ $kelas->nama_kelas }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select name="tahun_ajaran_id" required>
+                @foreach($daftarTahunAjaran as $periode)
+                    <option value="{{ $periode->id }}" @selected((int) $tahunAjaran->id === (int) $periode->id)>
+                        {{ $periode->nama_tahun_ajaran }} - {{ ucfirst($periode->semester ?? 'ganjil') }}
                     </option>
                 @endforeach
             </select>
@@ -53,10 +61,18 @@
                 <td>{{ isset($catatan[$murid->id]) ? 'Ada' : 'Belum ada' }}</td>
                 <td>
                     <div style="display:flex;gap:6px;flex-wrap:wrap">
-                        <a class="btn alt" href="{{ route('guru.raport.cetak', $murid->id) }}" target="_blank">
+                        <a
+                            class="btn alt"
+                            href="{{ route('guru.raport.cetak', ['siswa' => $murid->id, 'tahun_ajaran_id' => $tahunAjaran->id]) }}"
+                            target="_blank"
+                        >
                             Raport Formal
                         </a>
-                        <a class="btn alt" href="{{ route('guru.raport-diniyah.cetak', $murid->id) }}" target="_blank">
+                        <a
+                            class="btn alt"
+                            href="{{ route('guru.raport-diniyah.cetak', ['siswa' => $murid->id, 'tahun_ajaran_id' => $tahunAjaran->id]) }}"
+                            target="_blank"
+                        >
                             Raport Diniyah
                         </a>
                     </div>

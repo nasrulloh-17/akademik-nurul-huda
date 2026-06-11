@@ -34,7 +34,10 @@
 
 <div class="card">
     @forelse($mapelGuru as $m)
-        <a class="btn {{ $aktif && $aktif->id === $m->id ? '' : 'alt' }}" href="{{ route('guru.nilai', $m->id) }}">
+        <a
+            class="btn {{ $aktif && $aktif->id === $m->id ? '' : 'alt' }}"
+            href="{{ route('guru.nilai', ['mapel' => $m->id, 'kelas_id' => $kelasAktif, 'tahun_ajaran_id' => $tahunAjaran->id]) }}"
+        >
             {{ $m->nama_mata_pelajaran }}
         </a>
     @empty
@@ -43,14 +46,26 @@
 </div>
 
 @if($aktif)
+    @php
+        $periodeAktif = (bool) ($tahunAjaran->aktif ?? false);
+    @endphp
+
     <div class="card">
         <form method="get" action="{{ route('guru.nilai', $aktif->id) }}">
             <div class="form-grid">
                 <select name="kelas_id" required>
                     <option value="">Pilih kelas</option>
                     @foreach($kelas as $item)
-                        <option value="{{ $item->id }}" @selected((int) $kelasAktif === $item->id)>
+                        <option value="{{ $item->id }}" @selected((int) $kelasAktif === (int) $item->id)>
                             {{ $item->nama_kelas }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <select name="tahun_ajaran_id" required>
+                    @foreach($daftarTahunAjaran as $periode)
+                        <option value="{{ $periode->id }}" @selected((int) $tahunAjaran->id === (int) $periode->id)>
+                            {{ $periode->nama_tahun_ajaran }} - {{ ucfirst($periode->semester ?? 'ganjil') }}
                         </option>
                     @endforeach
                 </select>
@@ -58,7 +73,11 @@
                 <button class="btn" type="submit">Tampilkan Kelas</button>
 
                 @if($kelasAktif)
-                    <a class="btn alt" href="{{ route('guru.nilai.cetak', ['mapel' => $aktif->id, 'kelas_id' => $kelasAktif]) }}" target="_blank">
+                    <a
+                        class="btn alt"
+                        href="{{ route('guru.nilai.cetak', ['mapel' => $aktif->id, 'kelas_id' => $kelasAktif, 'tahun_ajaran_id' => $tahunAjaran->id]) }}"
+                        target="_blank"
+                    >
                         Cetak Nilai PDF
                     </a>
                 @endif
@@ -68,15 +87,21 @@
 
     <form method="post" action="{{ route('guru.nilai.simpan', $aktif->id) }}">
         @csrf
+        <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunAjaran->id }}">
 
         <div class="card">
             <div class="nilai-kkm-bar">
                 <div>
                     <h3 style="margin:0">{{ $aktif->nama_mata_pelajaran }}</h3>
                     <p class="muted" style="margin-bottom:0">
-                        Tahun ajaran aktif:
+                        Periode:
                         {{ $tahunAjaran->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaran->semester ?? 'ganjil') }}
                     </p>
+                    @unless($periodeAktif)
+                        <p class="muted" style="margin-bottom:0;color:#dc3545">
+                            Nilai periode lama hanya bisa dilihat, tidak bisa diubah.
+                        </p>
+                    @endunless
                 </div>
 
                 <label>
@@ -141,7 +166,7 @@
                                 name="nilai[{{ $murid->id }}][nilai_tugas]"
                                 value="{{ $n?->nilai_tugas }}"
                                 data-nilai-tugas
-                                @disabled($aktif->kkm === null)
+                                @disabled($aktif->kkm === null || ! $periodeAktif)
                             >
                         </td>
                         <td>
@@ -155,7 +180,7 @@
                                 name="nilai[{{ $murid->id }}][nilai_uts]"
                                 value="{{ $n?->nilai_uts }}"
                                 data-nilai-uts
-                                @disabled($aktif->kkm === null)
+                                @disabled($aktif->kkm === null || ! $periodeAktif)
                             >
                         </td>
                         <td>
@@ -169,7 +194,7 @@
                                 name="nilai[{{ $murid->id }}][nilai_uas]"
                                 value="{{ $n?->nilai_uas }}"
                                 data-nilai-uas
-                                @disabled($aktif->kkm === null)
+                                @disabled($aktif->kkm === null || ! $periodeAktif)
                             >
                         </td>
                         <td>
@@ -179,7 +204,7 @@
                             <input
                                 name="nilai[{{ $murid->id }}][catatan_guru]"
                                 value="{{ $n->catatan_guru ?? '' }}"
-                                @disabled($aktif->kkm === null)
+                                @disabled($aktif->kkm === null || ! $periodeAktif)
                             >
                         </td>
                     </tr>
@@ -187,7 +212,11 @@
             </table>
 
             <p>
-                <button class="btn" @disabled($aktif->kkm === null)>Simpan Nilai</button>
+                @if($periodeAktif)
+                    <button class="btn" @disabled($aktif->kkm === null)>Simpan Nilai</button>
+                @else
+                    <button class="btn" disabled>Periode Lama Tidak Bisa Diubah</button>
+                @endif
             </p>
         </div>
     </form>

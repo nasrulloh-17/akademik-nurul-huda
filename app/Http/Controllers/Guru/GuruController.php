@@ -21,6 +21,49 @@ class GuruController extends Controller
         'Kepribadian' => ['Baik', 'Cukup', 'Kurang'],
     ];
 
+    private function keyInputKegiatanTambahan(string $teks): string
+    {
+        return trim(strtolower(preg_replace('/[^A-Za-z0-9]+/', '_', $teks)), '_');
+    }
+
+    private function keyKegiatanTambahanUntukView(): array
+    {
+        $keys = [];
+
+        foreach ($this->kegiatanTambahan as $kategori => $kegiatanList) {
+            $keys[$kategori] = [
+                'key' => $this->keyInputKegiatanTambahan($kategori),
+                'kegiatan' => [],
+            ];
+
+            foreach ($kegiatanList as $kegiatan) {
+                $keys[$kategori]['kegiatan'][$kegiatan] = $this->keyInputKegiatanTambahan($kegiatan);
+            }
+        }
+
+        return $keys;
+    }
+
+    private function keyKegiatanTambahanUntukSimpan(): array
+    {
+        $keys = [];
+
+        foreach ($this->kegiatanTambahan as $kategori => $kegiatanList) {
+            $kategoriKey = $this->keyInputKegiatanTambahan($kategori);
+
+            $keys[$kategoriKey] = [
+                'kategori' => $kategori,
+                'kegiatan' => [],
+            ];
+
+            foreach ($kegiatanList as $kegiatan) {
+                $keys[$kategoriKey]['kegiatan'][$this->keyInputKegiatanTambahan($kegiatan)] = $kegiatan;
+            }
+        }
+
+        return $keys;
+    }
+
     private function tahunAjaranAktif()
     {
         $tahunAjaran = DB::table('tahun_ajaran')->where('aktif', true)->first();
@@ -38,6 +81,37 @@ class GuruController extends Controller
         ]);
 
         return DB::table('tahun_ajaran')->where('id', $id)->first();
+    }
+
+    private function daftarTahunAjaran()
+    {
+        return DB::table('tahun_ajaran')->orderByDesc('id')->get();
+    }
+
+    private function tahunAjaranTerpilih(Request $request)
+    {
+        $tahunAjaranAktif = $this->tahunAjaranAktif();
+        $tahunAjaranId = $request->integer('tahun_ajaran_id');
+
+        if (! $tahunAjaranId) {
+            return $tahunAjaranAktif;
+        }
+
+        return DB::table('tahun_ajaran')->where('id', $tahunAjaranId)->first() ?: $tahunAjaranAktif;
+    }
+
+    private function tahunAjaranInputAktif(Request $request)
+    {
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaranId = $request->integer('tahun_ajaran_id');
+
+        if ($tahunAjaranId && $tahunAjaranId !== (int) $tahunAjaran->id) {
+            throw ValidationException::withMessages([
+                'tahun_ajaran_id' => 'Nilai tahun ajaran lama hanya bisa dilihat, tidak bisa diubah.',
+            ]);
+        }
+
+        return $tahunAjaran;
     }
 
     private function guru()
@@ -382,7 +456,8 @@ class GuruController extends Controller
     public function nilai(Request $request, ?int $mapel = null)
     {
         $guru = $this->guru();
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranTerpilih($request);
+        $daftarTahunAjaran = $this->daftarTahunAjaran();
         $mapelGuru = DB::table('mata_pelajaran')->where('guru_id', $guru->id)->get();
         $aktif = $mapel ? $mapelGuru->firstWhere('id', $mapel) : $mapelGuru->first();
         $kelas = DB::table('kelas')->orderBy('nama_kelas')->get();
@@ -402,13 +477,13 @@ class GuruController extends Controller
                 ->keyBy('siswa_id')
             : collect();
 
-        return view('guru.nilai', compact('mapelGuru', 'aktif', 'kelas', 'kelasAktif', 'siswa', 'nilai', 'tahunAjaran'));
+        return view('guru.nilai', compact('mapelGuru', 'aktif', 'kelas', 'kelasAktif', 'siswa', 'nilai', 'tahunAjaran', 'daftarTahunAjaran'));
     }
 
     public function simpanNilai(Request $request, int $mapel)
     {
         $guru = $this->guru();
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranInputAktif($request);
         $mataPelajaran = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
 
         if (! $mataPelajaran) {
@@ -467,7 +542,7 @@ class GuruController extends Controller
     public function cetakNilai(Request $request, int $mapel)
     {
         $guru = $this->guru();
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranTerpilih($request);
         $aktif = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
 
         if (! $aktif) {
@@ -624,7 +699,8 @@ class GuruController extends Controller
             return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
         }
 
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranTerpilih($request);
+        $daftarTahunAjaran = $this->daftarTahunAjaran();
         $kelasAktif = $request->integer('kelas_id') ?: $kelasWali->first()->id;
 
         if (! $kelasWali->contains('id', $kelasAktif)) {
@@ -647,18 +723,20 @@ class GuruController extends Controller
             'kelasWali' => $kelasWali,
             'kelasAktif' => $kelasAktif,
             'tahunAjaran' => $tahunAjaran,
+            'daftarTahunAjaran' => $daftarTahunAjaran,
             'siswa' => $siswa,
             'nilai' => $nilai,
             'kegiatanTambahan' => $this->kegiatanTambahan,
+            'kegiatanTambahanKeys' => $this->keyKegiatanTambahanUntukView(),
             'nilaiKegiatanTambahan' => $this->nilaiKegiatanTambahan,
         ]);
     }
 
-    public function cetakRaportSiswa(int $siswaId)
+    public function cetakRaportSiswa(Request $request, int $siswaId)
     {
         $guru = $this->guru();
         $kelasWali = $this->kelasWali($guru->id);
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranTerpilih($request);
         $siswa = DB::table('siswa')
             ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
             ->select('siswa.*', 'kelas.nama_kelas', 'kelas.tingkat')
@@ -753,11 +831,11 @@ class GuruController extends Controller
         ]);
     }
 
-    public function cetakRaportDiniyah(int $siswaId)
+    public function cetakRaportDiniyah(Request $request, int $siswaId)
     {
         $guru = $this->guru();
         $kelasWali = $this->kelasWali($guru->id);
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranTerpilih($request);
         $siswa = DB::table('siswa')
             ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
             ->select('siswa.*', 'kelas.nama_kelas', 'kelas.tingkat')
@@ -810,7 +888,8 @@ class GuruController extends Controller
             return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
         }
 
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranTerpilih($request);
+        $daftarTahunAjaran = $this->daftarTahunAjaran();
         $kelasAktif = $request->integer('kelas_id') ?: $kelasWali->first()->id;
 
         if (! $kelasWali->contains('id', $kelasAktif)) {
@@ -843,15 +922,16 @@ class GuruController extends Controller
             ->get()
             ->keyBy('siswa_id');
 
-        return view('guru.rekap-raport', compact('kelasWali', 'kelasAktif', 'tahunAjaran', 'siswa', 'mapel', 'nilai', 'kegiatanTambahan', 'catatan'));
+        return view('guru.rekap-raport', compact('kelasWali', 'kelasAktif', 'tahunAjaran', 'daftarTahunAjaran', 'siswa', 'mapel', 'nilai', 'kegiatanTambahan', 'catatan'));
     }
 
     public function simpanKegiatanTambahan(Request $request)
     {
         $guru = $this->guru();
         $kelasWali = $this->kelasWali($guru->id);
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranInputAktif($request);
         $kelasId = $request->integer('kelas_id');
+        $kegiatanTambahanKeys = $this->keyKegiatanTambahanUntukSimpan();
 
         if (! $kelasWali->contains('id', $kelasId)) {
             return back()->withErrors($this->pesanTidakBerhak());
@@ -861,20 +941,30 @@ class GuruController extends Controller
             ->where('kelas_id', $kelasId)
             ->where('status', 'aktif')
             ->pluck('id')
+            ->map(fn ($id) => (int) $id)
             ->toArray();
+        $jumlahTersimpan = 0;
 
         foreach ($request->input('nilai', []) as $siswaId => $kategoriList) {
-            if (! in_array((int) $siswaId, $siswaKelas, true)) {
+            $siswaId = (int) $siswaId;
+
+            if (! in_array($siswaId, $siswaKelas, true)) {
                 continue;
             }
 
-            foreach ($kategoriList as $kategori => $kegiatanList) {
-                if (! isset($this->kegiatanTambahan[$kategori])) {
+            foreach ($kategoriList as $kategoriKey => $kegiatanList) {
+                $kategoriInfo = $kegiatanTambahanKeys[$kategoriKey] ?? null;
+
+                if (! $kategoriInfo) {
                     continue;
                 }
 
-                foreach ($kegiatanList as $kegiatan => $isi) {
-                    if (! in_array($kegiatan, $this->kegiatanTambahan[$kategori], true)) {
+                $kategori = $kategoriInfo['kategori'];
+
+                foreach ($kegiatanList as $kegiatanKey => $isi) {
+                    $kegiatan = $kategoriInfo['kegiatan'][$kegiatanKey] ?? null;
+
+                    if (! $kegiatan) {
                         continue;
                     }
 
@@ -901,8 +991,16 @@ class GuruController extends Controller
                             'updated_at' => now(),
                         ]
                     );
+
+                    $jumlahTersimpan++;
                 }
             }
+        }
+
+        if ($jumlahTersimpan === 0) {
+            return back()->withErrors([
+                'nilai' => 'Belum ada nilai kegiatan tambahan yang berhasil disimpan. Pastikan kelas yang dipilih sesuai dengan kelas wali.',
+            ])->withInput();
         }
 
         return back()->with('sukses', 'Nilai kegiatan tambahan berhasil disimpan.');
