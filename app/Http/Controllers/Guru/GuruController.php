@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class GuruController extends Controller
 {
@@ -458,7 +459,14 @@ class GuruController extends Controller
         $guru = $this->guru();
         $tahunAjaran = $this->tahunAjaranTerpilih($request);
         $daftarTahunAjaran = $this->daftarTahunAjaran();
-        $mapelGuru = DB::table('mata_pelajaran')->where('guru_id', $guru->id)->get();
+        $mapelGuru = DB::table('mata_pelajaran')
+            ->leftJoin('kelas', 'kelas.id', '=', 'mata_pelajaran.kelas_id')
+            ->where('mata_pelajaran.guru_id', $guru->id)
+            ->select('mata_pelajaran.*', 'kelas.nama_kelas', 'kelas.tingkat')
+            ->orderBy('kelas.tingkat')
+            ->orderBy('kelas.nama_kelas')
+            ->orderBy('mata_pelajaran.nama_mata_pelajaran')
+            ->get();
         $aktif = $mapel ? $mapelGuru->firstWhere('id', $mapel) : $mapelGuru->first();
         $kelas = DB::table('kelas')->orderBy('nama_kelas')->get();
         $kelasAktif = $request->integer('kelas_id') ?: ($aktif->kelas_id ?? null);
@@ -745,6 +753,18 @@ class GuruController extends Controller
 
         abort_unless($siswa, 404);
 
+        $kelasRaportId = DB::table('riwayat_kelas')
+            ->where('siswa_id', $siswa->id)
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->value('kelas_id') ?: $siswa->kelas_id;
+        $kelasRaport = DB::table('kelas')->where('id', $kelasRaportId)->first();
+
+        if ($kelasRaport) {
+            $siswa->kelas_id = $kelasRaport->id;
+            $siswa->nama_kelas = $kelasRaport->nama_kelas;
+            $siswa->tingkat = $kelasRaport->tingkat;
+        }
+
         if (! $kelasWali->contains('id', $siswa->kelas_id)) {
             return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
         }
@@ -752,19 +772,15 @@ class GuruController extends Controller
         $dataSekolah = DB::table('data_sekolah')->first();
         $tingkat = (int) ($siswa->tingkat ?: preg_replace('/\D+/', '', (string) $siswa->nama_kelas));
         $pakaiMts = $tingkat >= 7 && $tingkat <= 9;
-
-        $nilai = DB::table('mata_pelajaran')
+        $nilai = DB::table('nilai')
+            ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')
             ->leftJoin('guru', 'guru.id', '=', 'mata_pelajaran.guru_id')
-            ->leftJoin('nilai', function ($join) use ($siswa, $tahunAjaran) {
-                $join->on('nilai.mata_pelajaran_id', '=', 'mata_pelajaran.id')
-                    ->where('nilai.siswa_id', $siswa->id)
-                    ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
+            ->where('nilai.siswa_id', $siswa->id)
+            ->where('nilai.tahun_ajaran_id', $tahunAjaran->id)
+            ->where(function ($query) {
+                $query->where('mata_pelajaran.jenis_pelajaran', 'Formal')
+                    ->orWhereNull('mata_pelajaran.jenis_pelajaran');
             })
-            ->where(function ($query) use ($siswa) {
-                $query->where('mata_pelajaran.kelas_id', $siswa->kelas_id)
-                    ->orWhereNull('mata_pelajaran.kelas_id');
-            })
-            ->where('mata_pelajaran.jenis_pelajaran', 'Formal')
             ->select(
                 'mata_pelajaran.id',
                 'mata_pelajaran.nama_mata_pelajaran',
@@ -785,14 +801,25 @@ class GuruController extends Controller
             ->orderBy('kegiatan')
             ->get()
             ->groupBy('kategori');
+        $siswaKelasIds = DB::table('riwayat_kelas')
+            ->where('kelas_id', $siswa->kelas_id)
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->pluck('siswa_id');
+
+        if ($siswaKelasIds->isEmpty()) {
+            $siswaKelasIds = DB::table('siswa')
+                ->where('kelas_id', $siswa->kelas_id)
+                ->where('status', 'aktif')
+                ->pluck('id');
+        }
+
         $peringkatKelas = DB::table('siswa')
             ->leftJoin('nilai', function ($join) use ($tahunAjaran) {
                 $join->on('nilai.siswa_id', '=', 'siswa.id')
                     ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
             })
             ->leftJoin('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')
-            ->where('siswa.kelas_id', $siswa->kelas_id)
-            ->where('siswa.status', 'aktif')
+            ->whereIn('siswa.id', $siswaKelasIds)
             ->where(function ($query) {
                 $query->where('mata_pelajaran.jenis_pelajaran', 'Formal')
                     ->orWhereNull('mata_pelajaran.id');
@@ -844,20 +871,26 @@ class GuruController extends Controller
 
         abort_unless($siswa, 404);
 
+        $kelasRaportId = DB::table('riwayat_kelas')
+            ->where('siswa_id', $siswa->id)
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->value('kelas_id') ?: $siswa->kelas_id;
+        $kelasRaport = DB::table('kelas')->where('id', $kelasRaportId)->first();
+
+        if ($kelasRaport) {
+            $siswa->kelas_id = $kelasRaport->id;
+            $siswa->nama_kelas = $kelasRaport->nama_kelas;
+            $siswa->tingkat = $kelasRaport->tingkat;
+        }
+
         if (! $kelasWali->contains('id', $siswa->kelas_id)) {
             return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
         }
 
-        $nilai = DB::table('mata_pelajaran')
-            ->leftJoin('nilai', function ($join) use ($siswa, $tahunAjaran) {
-                $join->on('nilai.mata_pelajaran_id', '=', 'mata_pelajaran.id')
-                    ->where('nilai.siswa_id', $siswa->id)
-                    ->where('nilai.tahun_ajaran_id', $tahunAjaran->id);
-            })
-            ->where(function ($query) use ($siswa) {
-                $query->where('mata_pelajaran.kelas_id', $siswa->kelas_id)
-                    ->orWhereNull('mata_pelajaran.kelas_id');
-            })
+        $nilai = DB::table('nilai')
+            ->join('mata_pelajaran', 'mata_pelajaran.id', '=', 'nilai.mata_pelajaran_id')
+            ->where('nilai.siswa_id', $siswa->id)
+            ->where('nilai.tahun_ajaran_id', $tahunAjaran->id)
             ->where('mata_pelajaran.jenis_pelajaran', 'Non formal')
             ->select(
                 'mata_pelajaran.id',

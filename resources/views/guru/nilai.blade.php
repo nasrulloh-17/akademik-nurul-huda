@@ -12,6 +12,16 @@
         margin-bottom: 12px;
     }
 
+    .mapel-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .mapel-buttons .btn {
+        margin: 0;
+    }
+
     @media (max-width: 640px) {
         .nilai-hide-mobile {
             display: none;
@@ -33,16 +43,24 @@
 </style>
 
 <div class="card">
-    @forelse($mapelGuru as $m)
-        <a
-            class="btn {{ $aktif && $aktif->id === $m->id ? '' : 'alt' }}"
-            href="{{ route('guru.nilai', ['mapel' => $m->id, 'kelas_id' => $kelasAktif, 'tahun_ajaran_id' => $tahunAjaran->id]) }}"
-        >
-            {{ $m->nama_mata_pelajaran }}
-        </a>
-    @empty
-        Belum ada mata pelajaran yang diampu.
-    @endforelse
+    <h3>Mata Pelajaran yang Diampu</h3>
+
+    <div class="mapel-buttons">
+        @forelse($mapelGuru as $m)
+            @php
+                $labelKelas = $m->tingkat ?: $m->nama_kelas;
+            @endphp
+
+            <a
+                class="btn {{ $aktif && $aktif->id === $m->id ? '' : 'alt' }}"
+                href="{{ route('guru.nilai', ['mapel' => $m->id, 'kelas_id' => $m->kelas_id ?: $kelasAktif, 'tahun_ajaran_id' => $tahunAjaran->id]) }}"
+            >
+                {{ $m->nama_mata_pelajaran }}{{ $labelKelas ? ' '.$labelKelas : '' }}
+            </a>
+        @empty
+            Belum ada mata pelajaran yang diampu.
+        @endforelse
+    </div>
 </div>
 
 @if($aktif)

@@ -116,8 +116,8 @@
         .signature {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 18px;
-            margin-top: 6px;
+            gap: 24px;
+            margin-top: 12px;
         }
 
         .signature-box {
@@ -125,7 +125,15 @@
         }
 
         .signature-space {
-            height: 54px;
+            height: 76px;
+        }
+
+        .activity-name {
+            width: 52%;
+        }
+
+        .activity-score {
+            width: 130px;
         }
 
         .note {
@@ -308,8 +316,8 @@
                 <table>
                     <tr>
                         <th style="width:32px">No</th>
-                        <th>Kegiatan</th>
-                        <th style="width:90px">Nilai</th>
+                        <th class="activity-name">Kegiatan</th>
+                        <th class="activity-score">Nilai</th>
                     </tr>
 
                     @forelse($ekstrakurikuler as $kegiatan)
@@ -332,8 +340,8 @@
                 <table>
                     <tr>
                         <th style="width:32px">No</th>
-                        <th>Kegiatan</th>
-                        <th style="width:90px">Nilai</th>
+                        <th class="activity-name">Kegiatan</th>
+                        <th class="activity-score">Nilai</th>
                     </tr>
 
                     @forelse($pengembanganDiri as $kegiatan)
@@ -358,8 +366,8 @@
                 <table>
                     <tr>
                         <th style="width:32px">No</th>
-                        <th>Aspek</th>
-                        <th style="width:90px">Nilai</th>
+                        <th class="activity-name">Aspek</th>
+                        <th class="activity-score">Nilai</th>
                     </tr>
 
                     @forelse($kepribadian as $kegiatan)
