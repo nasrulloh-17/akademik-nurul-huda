@@ -90,6 +90,11 @@ class AdminController extends Controller
         return "'".str_replace(["\\", "'"], ["\\\\", "\\'"], (string) $value)."'";
     }
 
+    private function fileAksesNilaiWaliKelas(): string
+    {
+        return storage_path('app/akses-nilai-wali-kelas.flag');
+    }
+
     public function dashboard()
     {
         $this->jaga();
@@ -99,7 +104,24 @@ class AdminController extends Controller
             'jumlahSiswa' => DB::table('siswa')->count(),
             'jumlahKelas' => DB::table('kelas')->count(),
             'jumlahMapel' => DB::table('mata_pelajaran')->count(),
+            'aksesNilaiWaliKelasAktif' => file_exists($this->fileAksesNilaiWaliKelas()),
         ]);
+    }
+
+    public function toggleAksesNilaiWaliKelas()
+    {
+        $this->jaga();
+        $file = $this->fileAksesNilaiWaliKelas();
+
+        if (file_exists($file)) {
+            unlink($file);
+
+            return back()->with('sukses', 'Akses input nilai semua mapel oleh wali kelas dinonaktifkan.');
+        }
+
+        file_put_contents($file, now()->toDateTimeString());
+
+        return back()->with('sukses', 'Akses input nilai semua mapel oleh wali kelas diaktifkan sementara.');
     }
 
     public function slider()

@@ -22,6 +22,7 @@ Route::post('/keluar', [AuthController::class, 'keluar'])->name('keluar');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::post('/akses-nilai-wali-kelas', [AdminController::class, 'toggleAksesNilaiWaliKelas'])->name('akses-nilai-wali-kelas');
     Route::get('/slider', [AdminController::class, 'slider'])->name('slider');
     Route::post('/slider', [AdminController::class, 'simpanSlider'])->name('slider.simpan');
     Route::post('/slider/{id}/hapus', [AdminController::class, 'hapusSlider'])->name('slider.hapus');

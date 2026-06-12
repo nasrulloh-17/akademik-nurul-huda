@@ -136,6 +136,11 @@
             width: 130px;
         }
 
+        .nilai-huruf {
+            font-size: 10.4pt;
+            white-space: nowrap;
+        }
+
         .note {
             font-size: 10pt;
             margin-top: 4px;
@@ -170,7 +175,7 @@
 
             @page {
                 size: 215mm 330mm;
-                margin: 10mm 12mm;
+                margin: 9mm 11mm;
             }
         }
     </style>
@@ -273,15 +278,15 @@
 
         <table>
             <tr>
-                <th rowspan="2" style="width:32px">No</th>
+                <th rowspan="2" style="width:24px">No</th>
                 <th rowspan="2">Mata Pelajaran</th>
-                <th rowspan="2" style="width:48px">KKM</th>
+                <th rowspan="2" style="width:34px">KKM</th>
                 <th colspan="3">Pengetahuan</th>
             </tr>
             <tr>
-                <th style="width:54px">Nilai</th>
-                <th style="width:145px">Huruf</th>
-                <th style="width:88px">Predikat</th>
+                <th style="width:42px">Nilai</th>
+                <th style="width:178px">Huruf</th>
+                <th style="width:64px">Predikat</th>
             </tr>
 
             @forelse($nilai as $n)
@@ -299,7 +304,7 @@
                     <td class="center {{ $belumTuntas ? 'below-kkm' : '' }}">
                         {{ $nilaiAkhir === null ? '-' : $nilaiAkhir }}
                     </td>
-                    <td>{{ $nilaiAkhir === null ? '-' : $terbilang($nilaiAkhir) }}</td>
+                    <td class="nilai-huruf">{{ $nilaiAkhir === null ? '-' : $terbilang($nilaiAkhir) }}</td>
                     <td class="center">{{ $predikat($nilaiAkhir, $n->kkm) }}</td>
                 </tr>
             @empty
@@ -315,7 +320,7 @@
 
                 <table>
                     <tr>
-                        <th style="width:32px">No</th>
+                        <th style="width:26px">No</th>
                         <th class="activity-name">Kegiatan</th>
                         <th class="activity-score">Nilai</th>
                     </tr>
@@ -339,7 +344,7 @@
 
                 <table>
                     <tr>
-                        <th style="width:32px">No</th>
+                        <th style="width:26px">No</th>
                         <th class="activity-name">Kegiatan</th>
                         <th class="activity-score">Nilai</th>
                     </tr>
@@ -365,7 +370,7 @@
 
                 <table>
                     <tr>
-                        <th style="width:32px">No</th>
+                        <th style="width:26px">No</th>
                         <th class="activity-name">Aspek</th>
                         <th class="activity-score">Nilai</th>
                     </tr>

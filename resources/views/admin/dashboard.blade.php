@@ -24,4 +24,23 @@
         <h1>{{ $jumlahMapel }}</h1>
     </div>
 </div>
+
+<div class="card">
+    <h3>Akses Input Nilai Wali Kelas</h3>
+    <p class="muted">
+        Jika diaktifkan, setiap wali kelas bisa menginput nilai semua mata pelajaran pada kelas walinya untuk sementara.
+    </p>
+
+    <p>
+        Status:
+        <strong>{{ $aksesNilaiWaliKelasAktif ? 'Aktif' : 'Nonaktif' }}</strong>
+    </p>
+
+    <form method="post" action="{{ route('admin.akses-nilai-wali-kelas') }}">
+        @csrf
+        <button class="btn {{ $aksesNilaiWaliKelasAktif ? 'danger' : '' }}">
+            {{ $aksesNilaiWaliKelasAktif ? 'Nonaktifkan Akses Wali Kelas' : 'Aktifkan Akses Wali Kelas' }}
+        </button>
+    </form>
+</div>
 @endsection

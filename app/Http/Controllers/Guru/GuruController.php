@@ -146,6 +146,32 @@ class GuruController extends Controller
             ->get();
     }
 
+    private function aksesNilaiWaliKelasAktif(): bool
+    {
+        return file_exists(storage_path('app/akses-nilai-wali-kelas.flag'));
+    }
+
+    private function bolehInputMapel($guru, $mataPelajaran): bool
+    {
+        if (! $mataPelajaran) {
+            return false;
+        }
+
+        if ((int) $mataPelajaran->guru_id === (int) $guru->id) {
+            return true;
+        }
+
+        if (! $this->aksesNilaiWaliKelasAktif()) {
+            return false;
+        }
+
+        return DB::table('guru_role')
+            ->where('guru_id', $guru->id)
+            ->where('role', 'wali kelas')
+            ->where('kelas_id', $mataPelajaran->kelas_id)
+            ->exists();
+    }
+
     private function streamCsv(string $namaFile, array $header, iterable $baris)
     {
         return response()->streamDownload(function () use ($header, $baris) {
@@ -196,6 +222,16 @@ class GuruController extends Controller
     private function nilaiKosongAtauValid($nilai): bool
     {
         return $nilai === null || $nilai === '' || (is_numeric($nilai) && $nilai >= 0 && $nilai <= 100);
+    }
+
+    private function mapelSetaraIds($mataPelajaran)
+    {
+        return DB::table('mata_pelajaran')
+            ->whereRaw('LOWER(TRIM(nama_mata_pelajaran)) = ?', [strtolower(trim($mataPelajaran->nama_mata_pelajaran))])
+            ->where('kelas_id', $mataPelajaran->kelas_id)
+            ->where('jenis_pelajaran', $mataPelajaran->jenis_pelajaran ?? 'Formal')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id);
     }
 
     public function dashboard()
@@ -459,9 +495,23 @@ class GuruController extends Controller
         $guru = $this->guru();
         $tahunAjaran = $this->tahunAjaranTerpilih($request);
         $daftarTahunAjaran = $this->daftarTahunAjaran();
+        $aksesNilaiWaliKelasAktif = $this->aksesNilaiWaliKelasAktif();
+        $kelasWaliIds = $aksesNilaiWaliKelasAktif
+            ? DB::table('guru_role')
+                ->where('guru_id', $guru->id)
+                ->where('role', 'wali kelas')
+                ->whereNotNull('kelas_id')
+                ->pluck('kelas_id')
+            : collect();
         $mapelGuru = DB::table('mata_pelajaran')
             ->leftJoin('kelas', 'kelas.id', '=', 'mata_pelajaran.kelas_id')
-            ->where('mata_pelajaran.guru_id', $guru->id)
+            ->where(function ($query) use ($guru, $kelasWaliIds) {
+                $query->where('mata_pelajaran.guru_id', $guru->id);
+
+                if ($kelasWaliIds->isNotEmpty()) {
+                    $query->orWhereIn('mata_pelajaran.kelas_id', $kelasWaliIds);
+                }
+            })
             ->select('mata_pelajaran.*', 'kelas.nama_kelas', 'kelas.tingkat')
             ->orderBy('kelas.tingkat')
             ->orderBy('kelas.nama_kelas')
@@ -485,16 +535,16 @@ class GuruController extends Controller
                 ->keyBy('siswa_id')
             : collect();
 
-        return view('guru.nilai', compact('mapelGuru', 'aktif', 'kelas', 'kelasAktif', 'siswa', 'nilai', 'tahunAjaran', 'daftarTahunAjaran'));
+        return view('guru.nilai', compact('mapelGuru', 'aktif', 'kelas', 'kelasAktif', 'siswa', 'nilai', 'tahunAjaran', 'daftarTahunAjaran', 'aksesNilaiWaliKelasAktif'));
     }
 
     public function simpanNilai(Request $request, int $mapel)
     {
         $guru = $this->guru();
         $tahunAjaran = $this->tahunAjaranInputAktif($request);
-        $mataPelajaran = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
+        $mataPelajaran = DB::table('mata_pelajaran')->where('id', $mapel)->first();
 
-        if (! $mataPelajaran) {
+        if (! $this->bolehInputMapel($guru, $mataPelajaran)) {
             return back()->withErrors($this->pesanTidakBerhak());
         }
 
@@ -502,7 +552,10 @@ class GuruController extends Controller
             return back()->withErrors(['kkm' => 'Isi nilai KKM terlebih dahulu sebelum menginput nilai siswa.']);
         }
 
+        $mapelSetaraIds = $this->mapelSetaraIds($mataPelajaran);
+
         foreach ($request->input('nilai', []) as $siswaId => $isi) {
+            $siswaId = (int) $siswaId;
             $nilaiTugas = $isi['nilai_tugas'] ?? null;
             $nilaiUts = $isi['nilai_uts'] ?? null;
             $nilaiUas = $isi['nilai_uas'] ?? null;
@@ -511,17 +564,43 @@ class GuruController extends Controller
                 return back()->withErrors(['nilai' => 'Nilai harus berupa angka 0 sampai 100.'])->withInput();
             }
 
-            DB::table('nilai')->updateOrInsert(
-                ['siswa_id' => $siswaId, 'mata_pelajaran_id' => $mapel, 'tahun_ajaran_id' => $tahunAjaran->id],
-                [
+            DB::transaction(function () use ($siswaId, $mapel, $tahunAjaran, $mapelSetaraIds, $nilaiTugas, $nilaiUts, $nilaiUas, $isi) {
+                $nilaiLama = DB::table('nilai')
+                    ->where('siswa_id', $siswaId)
+                    ->where('tahun_ajaran_id', $tahunAjaran->id)
+                    ->whereIn('mata_pelajaran_id', $mapelSetaraIds)
+                    ->orderByRaw('mata_pelajaran_id = ? desc', [$mapel])
+                    ->latest('updated_at')
+                    ->first();
+                $dataNilai = [
+                    'siswa_id' => $siswaId,
+                    'mata_pelajaran_id' => $mapel,
+                    'tahun_ajaran_id' => $tahunAjaran->id,
                     'nilai_tugas' => $nilaiTugas === '' ? null : $nilaiTugas,
                     'nilai_uts' => $nilaiUts === '' ? null : $nilaiUts,
                     'nilai_uas' => $nilaiUas === '' ? null : $nilaiUas,
                     'catatan_guru' => $isi['catatan_guru'] ?? null,
                     'updated_at' => now(),
                     'created_at' => now(),
-                ]
-            );
+                ];
+
+                if ($nilaiLama) {
+                    DB::table('nilai')
+                        ->where('siswa_id', $siswaId)
+                        ->where('tahun_ajaran_id', $tahunAjaran->id)
+                        ->whereIn('mata_pelajaran_id', $mapelSetaraIds)
+                        ->where('id', '!=', $nilaiLama->id)
+                        ->delete();
+
+                    unset($dataNilai['created_at']);
+
+                    DB::table('nilai')->where('id', $nilaiLama->id)->update($dataNilai);
+
+                    return;
+                }
+
+                DB::table('nilai')->insert($dataNilai);
+            });
         }
 
         return back()->with('sukses', 'Nilai berhasil diperbarui.');
@@ -530,8 +609,9 @@ class GuruController extends Controller
     public function simpanKkm(Request $request, int $mapel)
     {
         $guru = $this->guru();
+        $mataPelajaran = DB::table('mata_pelajaran')->where('id', $mapel)->first();
 
-        if (! DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->exists()) {
+        if (! $this->bolehInputMapel($guru, $mataPelajaran)) {
             return back()->withErrors($this->pesanTidakBerhak());
         }
 
@@ -551,9 +631,9 @@ class GuruController extends Controller
     {
         $guru = $this->guru();
         $tahunAjaran = $this->tahunAjaranTerpilih($request);
-        $aktif = DB::table('mata_pelajaran')->where('id', $mapel)->where('guru_id', $guru->id)->first();
+        $aktif = DB::table('mata_pelajaran')->where('id', $mapel)->first();
 
-        if (! $aktif) {
+        if (! $this->bolehInputMapel($guru, $aktif)) {
             return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
         }
 
@@ -783,16 +863,33 @@ class GuruController extends Controller
             })
             ->select(
                 'mata_pelajaran.id',
+                'mata_pelajaran.kelas_id',
                 'mata_pelajaran.nama_mata_pelajaran',
                 'mata_pelajaran.kkm',
                 'guru.nama_guru',
+                'nilai.id as nilai_id',
                 'nilai.nilai_tugas',
                 'nilai.nilai_uts',
                 'nilai.nilai_uas',
                 'nilai.catatan_guru'
             )
             ->orderBy('mata_pelajaran.nama_mata_pelajaran')
-            ->get();
+            ->get()
+            ->groupBy(fn ($item) => strtolower(trim(preg_replace('/\s+/', ' ', $item->nama_mata_pelajaran))))
+            ->map(function ($items) use ($siswa) {
+                return $items
+                    ->sortByDesc(function ($item) use ($siswa) {
+                        $kelasCocok = (int) $item->kelas_id === (int) $siswa->kelas_id;
+                        $nilaiLengkap = $item->nilai_tugas !== null && $item->nilai_uts !== null && $item->nilai_uas !== null;
+
+                        return ($kelasCocok ? 1000000 : 0)
+                            + ($nilaiLengkap ? 100000 : 0)
+                            + (int) $item->nilai_id;
+                    })
+                    ->first();
+            })
+            ->sortBy('nama_mata_pelajaran')
+            ->values();
         $kegiatanTambahan = DB::table('nilai_kegiatan_tambahan')
             ->where('nilai_kegiatan_tambahan.siswa_id', $siswa->id)
             ->where('nilai_kegiatan_tambahan.tahun_ajaran_id', $tahunAjaran->id)
@@ -894,14 +991,31 @@ class GuruController extends Controller
             ->where('mata_pelajaran.jenis_pelajaran', 'Non formal')
             ->select(
                 'mata_pelajaran.id',
+                'mata_pelajaran.kelas_id',
                 'mata_pelajaran.nama_mata_pelajaran',
+                'nilai.id as nilai_id',
                 'nilai.nilai_tugas',
                 'nilai.nilai_uts',
                 'nilai.nilai_uas',
                 'nilai.catatan_guru'
             )
             ->orderBy('mata_pelajaran.nama_mata_pelajaran')
-            ->get();
+            ->get()
+            ->groupBy(fn ($item) => strtolower(trim(preg_replace('/\s+/', ' ', $item->nama_mata_pelajaran))))
+            ->map(function ($items) use ($siswa) {
+                return $items
+                    ->sortByDesc(function ($item) use ($siswa) {
+                        $kelasCocok = (int) $item->kelas_id === (int) $siswa->kelas_id;
+                        $nilaiLengkap = $item->nilai_tugas !== null && $item->nilai_uts !== null && $item->nilai_uas !== null;
+
+                        return ($kelasCocok ? 1000000 : 0)
+                            + ($nilaiLengkap ? 100000 : 0)
+                            + (int) $item->nilai_id;
+                    })
+                    ->first();
+            })
+            ->sortBy('nama_mata_pelajaran')
+            ->values();
 
         return view('guru.cetak-raport-diniyah', array_merge([
             'guru' => $guru,

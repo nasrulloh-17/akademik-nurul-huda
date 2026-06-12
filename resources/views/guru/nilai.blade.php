@@ -44,6 +44,11 @@
 
 <div class="card">
     <h3>Mata Pelajaran yang Diampu</h3>
+    @if($aksesNilaiWaliKelasAktif)
+        <p class="muted">
+            Akses sementara wali kelas aktif: wali kelas dapat menginput semua mata pelajaran pada kelas walinya.
+        </p>
+    @endif
 
     <div class="mapel-buttons">
         @forelse($mapelGuru as $m)
