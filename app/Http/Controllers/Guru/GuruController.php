@@ -940,7 +940,9 @@ class GuruController extends Controller
             ->latest()
             ->first();
 
-        return view('guru.cetak-raport', [
+        $viewRaport = $pakaiMts ? 'guru.cetak-raport-smp' : 'guru.cetak-raport-sma';
+
+        return view($viewRaport, [
             'guru' => $guru,
             'siswa' => $siswa,
             'tahunAjaran' => $tahunAjaran,
