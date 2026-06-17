@@ -105,7 +105,6 @@
 
     .nav .btn,
     .hero .btn,
-    .slider-btn,
     .news-control {
         transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
     }
@@ -117,21 +116,16 @@
         box-shadow: 0 12px 26px rgba(0, 71, 76, .22);
     }
 
-    .slider-btn:hover {
-        transform: translateY(-50%) scale(1.06);
-        box-shadow: 0 12px 26px rgba(0, 71, 76, .22);
-    }
-
     .hero {
-        padding: 96px 7vw 38px;
+        padding: 86px 7vw 24px;
         background: url('{{ asset('images/bg-utama.png') }}') center/cover no-repeat;
-        min-height: 560px;
+        min-height: 520px;
     }
 
     .hero-grid {
         display: grid;
         grid-template-columns: .95fr 1.15fr;
-        gap: 28px;
+        gap: 22px;
         align-items: center;
     }
 
@@ -146,12 +140,14 @@
         font-size: 17px;
         color: #ffffff;
         max-width: 620px;
+        margin: 12px 0 16px;
     }
 
     .hero-2 {
         font-size: 22px;
         color: #ffffff;
         max-width: 620px;
+        margin: 0 0 8px;
     }
 
     .slider {
@@ -192,35 +188,6 @@
         display: block;
     }
 
-    .slider-btn {
-        position: absolute;
-        top: 50%;
-        z-index: 2;
-        transform: translateY(-50%);
-        width: 42px;
-        height: 42px;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, .9);
-        color: var(--hijau);
-        font-size: 24px;
-        font-weight: 800;
-        cursor: pointer;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, .16);
-    }
-
-    .slider-btn:hover {
-        background: white;
-    }
-
-    .slider-btn.prev {
-        left: 14px;
-    }
-
-    .slider-btn.next {
-        right: 14px;
-    }
-
     .slider-dots {
         position: absolute;
         left: 0;
@@ -247,46 +214,92 @@
     }
 
     .section {
-        padding: 38px 7vw;
+        padding: 26px 7vw;
         text-align: center;
     }
 
+    #berita.section {
+        padding-top: 20px;
+        padding-bottom: 16px;
+    }
+
+    #berita h2 {
+        margin: 0 0 6px;
+    }
+
     .section-jenjang {
-        padding-top: 14px;
+        padding-top: 8px;
     }
 
     .cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 18px;
-    }
-
-    .news-carousel {
-        position: relative;
-        max-width: 980px;
-        margin: 0 auto;
-    }
-
-    .news-window {
-        overflow: hidden;
-    }
-
-    .news-track {
-        display: flex;
-        gap: 18px;
-        transition: transform .45s ease;
+        gap: 14px;
     }
 
     .clean-item {
-        padding: 8px 12px;
+        padding: 6px 10px;
     }
 
-    .news-item {
-        flex: 0 0 calc((100% - 18px) / 2);
+    .news-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+        gap: 12px;
+        max-width: 1080px;
+        margin: 10px auto 0;
+        text-align: left;
+    }
+
+    .news-stack {
+        display: grid;
+        gap: 12px;
+    }
+
+    .news-card {
+        overflow: hidden;
+        border: 1px solid var(--garis);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 14px 34px rgba(0, 71, 76, .08);
+    }
+
+    .news-card-main {
+        min-height: 100%;
+    }
+
+    .news-card-side .news-link {
+        display: grid;
+        grid-template-columns: 170px minmax(0, 1fr);
+        min-height: 142px;
+    }
+
+    .news-body {
+        padding: 10px 12px 12px;
+    }
+
+    .news-body h3 {
+        margin: 0 0 6px;
+        color: var(--gelap);
+        line-height: 1.25;
+    }
+
+    .news-card-main .news-body h3 {
+        font-size: 22px;
+    }
+
+    .news-card-side .news-body h3 {
+        font-size: 16px;
+    }
+
+    .news-body p {
+        margin: 0 0 5px;
+        color: #66827f;
+        line-height: 1.38;
     }
 
     .news-link {
         display: block;
+        height: 100%;
         color: inherit;
         transition: color .2s ease, transform .2s ease;
     }
@@ -304,49 +317,45 @@
 
     .news-img {
         width: 100%;
-        height: 180px;
+        height: 170px;
         object-fit: cover;
-        border-radius: 8px;
         background: var(--muda);
     }
 
-    .news-controls {
+    .news-card-main .news-img {
+        height: 230px;
+    }
+
+    .news-card-side .news-img {
+        height: 100%;
+        min-height: 142px;
+    }
+
+    .news-empty {
+        max-width: 760px;
+        margin: 10px auto 0;
+        text-align: center;
+    }
+
+    .news-more-wrap {
         display: flex;
         justify-content: center;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .news-control {
-        width: 42px;
-        height: 42px;
-        border: 0;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #007979, #0fbea8);
-        color: white;
-        font-size: 22px;
-        font-weight: 800;
-        cursor: pointer;
-    }
-
-    .news-control:disabled {
-        opacity: .45;
-        cursor: not-allowed;
+        margin-top: 14px;
     }
 
     .jenjang-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 18px;
+        gap: 14px;
         max-width: 1080px;
-        margin: 18px auto 0;
+        margin: 12px auto 0;
     }
 
     .jenjang-card {
         display: grid;
         justify-items: center;
-        gap: 10px;
-        padding: 16px 16px 24px;
+        gap: 8px;
+        padding: 12px 12px 16px;
         border: 1px solid var(--garis);
         border-radius: 10px;
         background: #ffffff;
@@ -403,7 +412,7 @@
     .prestasi-carousel {
         position: relative;
         max-width: 1180px;
-        margin: 18px auto 0;
+        margin: 12px auto 0;
     }
 
     .prestasi-window {
@@ -412,12 +421,12 @@
 
     .prestasi-track {
         display: flex;
-        gap: 14px;
+        gap: 12px;
         transition: transform .45s ease;
     }
 
     .prestasi-card {
-        flex: 0 0 calc((100% - 70px) / 6);
+        flex: 0 0 calc((100% - 60px) / 6);
         min-width: 0;
         overflow: hidden;
         border: 1px solid var(--garis);
@@ -436,11 +445,11 @@
     }
 
     .prestasi-body {
-        padding: 12px;
+        padding: 10px;
     }
 
     .prestasi-body h3 {
-        margin: 0 0 8px;
+        margin: 0 0 6px;
         color: var(--gelap);
         font-size: 15px;
         line-height: 1.35;
@@ -450,14 +459,14 @@
         margin: 0;
         color: #66827f;
         font-size: 13px;
-        line-height: 1.55;
+        line-height: 1.42;
     }
 
     .prestasi-controls {
         display: flex;
         justify-content: center;
         gap: 10px;
-        margin-top: 20px;
+        margin-top: 14px;
     }
 
     .prestasi-control {
@@ -485,16 +494,16 @@
 
     .galeri-masonry {
         column-count: 4;
-        column-gap: 16px;
+        column-gap: 12px;
         max-width: 1180px;
-        margin: 18px auto 0;
+        margin: 12px auto 0;
         text-align: left;
     }
 
     .galeri-item {
         display: inline-block;
         width: 100%;
-        margin: 0 0 16px;
+        margin: 0 0 12px;
         overflow: hidden;
         border-radius: 10px;
         background: white;
@@ -502,10 +511,23 @@
         break-inside: avoid;
     }
 
+    .galeri-link {
+        display: block;
+        width: 100%;
+        cursor: zoom-in;
+        text-align: inherit;
+    }
+
     .galeri-item img {
         width: 100%;
         height: auto;
         display: block;
+        transition: transform .25s ease, filter .25s ease;
+    }
+
+    .galeri-link:hover img {
+        filter: brightness(.92);
+        transform: scale(1.02);
     }
 
     .galeri-caption {
@@ -518,18 +540,18 @@
     .galeri-more-wrap {
         display: flex;
         justify-content: center;
-        margin-top: 20px;
+        margin-top: 14px;
     }
 
     .bantuan {
-        padding: 38px 7vw;
+        padding: 26px 7vw;
         text-align: center;
     }
 
     .bantuan-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 28px;
+        gap: 18px;
         max-width: 1080px;
         margin: 0 auto;
     }
@@ -537,8 +559,8 @@
     .bantuan-item {
         display: grid;
         justify-items: center;
-        gap: 10px;
-        padding: 10px;
+        gap: 7px;
+        padding: 6px;
     }
 
     .bantuan-item img {
@@ -595,6 +617,19 @@
     .landing-footer a {
         color: #ffffff;
         font-weight: 800;
+    }
+
+    .reveal-on-scroll {
+        opacity: 0;
+        transform: translateY(26px);
+        transition: opacity .65s ease, transform .65s ease;
+        transition-delay: var(--reveal-delay, 0s);
+        will-change: opacity, transform;
+    }
+
+    .reveal-on-scroll.revealed {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .login-menu {
@@ -747,43 +782,78 @@
         }
 
         .hero-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, .95fr) minmax(145px, .7fr);
+            gap: 10px;
         }
 
         .slider {
-            justify-self: center;
-            width: min(100%, 520px);
+            justify-self: end;
+            width: min(100%, 220px);
         }
 
         .hero {
             min-height: auto;
-            padding: 76px 5vw 30px;
+            padding: 62px 5vw 14px;
+        }
+
+        .hero h1 {
+            font-size: 27px;
+            line-height: 1.05;
+        }
+
+        .hero-2 {
+            margin: 0 0 5px;
+            font-size: 15px;
         }
 
         .section {
-            padding: 30px 5vw;
+            padding: 22px 5vw;
         }
 
         .section-jenjang {
-            padding-top: 10px;
+            padding-top: 6px;
         }
 
         .hero-copy {
-            font-size: 14px;
+            margin: 6px 0 9px;
+            font-size: 12px;
+            line-height: 1.45;
         }
 
-        .news-item {
-            flex-basis: 100%;
+        .hero .btn {
+            padding: 9px 12px;
+            font-size: 12px;
+        }
+
+        .slider-dots {
+            bottom: 9px;
+        }
+
+        .slider-dot {
+            width: 7px;
+            height: 7px;
+        }
+
+        .slider-dot.active {
+            width: 18px;
+        }
+
+        .news-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .news-card-side .news-link {
+            grid-template-columns: 150px minmax(0, 1fr);
         }
 
         .jenjang-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            margin-top: 14px;
+            margin-top: 10px;
         }
 
         .prestasi-carousel,
         .galeri-masonry {
-            margin-top: 14px;
+            margin-top: 10px;
         }
 
         .prestasi-card {
@@ -796,14 +866,44 @@
     }
 
     @media (max-width: 560px) {
+        .hero-grid {
+            grid-template-columns: minmax(0, 1fr) minmax(112px, .62fr);
+            gap: 8px;
+        }
+
+        .hero {
+            padding: 58px 5vw 12px;
+        }
+
+        .hero h1 {
+            font-size: 22px;
+        }
+
+        .hero-2 {
+            font-size: 13px;
+        }
+
+        .hero-copy {
+            font-size: 11px;
+        }
+
+        .slider {
+            width: min(100%, 150px);
+        }
+
+        .hero .btn {
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
         .jenjang-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
+            gap: 9px;
         }
 
         .jenjang-card {
-            padding: 12px;
-            gap: 7px;
+            padding: 9px;
+            gap: 5px;
         }
 
         .jenjang-logo-img {
@@ -829,18 +929,50 @@
             flex-basis: 100%;
         }
 
+        .news-grid {
+            gap: 9px;
+            margin-top: 8px;
+        }
+
+        .news-card-main .news-img {
+            height: 175px;
+        }
+
+        .news-card-side .news-link {
+            grid-template-columns: 118px minmax(0, 1fr);
+            min-height: 112px;
+        }
+
+        .news-card-side .news-img {
+            min-height: 112px;
+        }
+
+        .news-body {
+            padding: 8px 9px;
+        }
+
+        .news-card-main .news-body h3,
+        .news-card-side .news-body h3 {
+            font-size: 15px;
+        }
+
+        .news-body p {
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
         .galeri-masonry {
             column-count: 2;
-            column-gap: 12px;
+            column-gap: 9px;
         }
 
         .bantuan {
-            padding: 28px 5vw;
+            padding: 20px 5vw;
         }
 
         .bantuan-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 20px 12px;
+            gap: 14px 9px;
         }
 
         .bantuan-item {
@@ -877,6 +1009,14 @@
             grid-column: 1 / -1;
             justify-items: center;
             text-align: center;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .reveal-on-scroll {
+            opacity: 1;
+            transform: none;
+            transition: none;
         }
     }
 </style>
@@ -945,8 +1085,6 @@
                 @endforelse
             </div>
 
-            <button class="slider-btn prev" type="button" data-slider-prev aria-label="Slide sebelumnya">&lsaquo;</button>
-            <button class="slider-btn next" type="button" data-slider-next aria-label="Slide berikutnya">&rsaquo;</button>
             <div class="slider-dots" data-slider-dots></div>
         </div>
     </div>
@@ -955,35 +1093,54 @@
 <section class="section" id="berita">
     <h2>Berita Seputar Yayasan</h2>
 
-    <div class="news-carousel" data-news-carousel>
-        <div class="news-window">
-            <div class="news-track" data-news-track>
-                @forelse($berita as $item)
-                    <article class="clean-item news-item">
+    @if($berita->isNotEmpty())
+        @php
+            $beritaUtama = $berita->first();
+            $beritaSamping = $berita->skip(1)->take(2);
+        @endphp
+
+        <div class="news-grid">
+            <article class="news-card news-card-main">
+                <a class="news-link" href="{{ route('berita.detail', $beritaUtama->id) }}">
+                    @if($beritaUtama->foto_kegiatan)
+                        <img class="news-img" src="{{ asset($beritaUtama->foto_kegiatan) }}" alt="{{ $beritaUtama->judul }}">
+                    @endif
+
+                    <div class="news-body">
+                        <h3>{{ $beritaUtama->judul }}</h3>
+                        <p class="muted">{{ $beritaUtama->tanggal_berita }}</p>
+                        <p>{{ \Illuminate\Support\Str::limit($beritaUtama->isi, 180) }}</p>
+                        <strong>Baca selengkapnya</strong>
+                    </div>
+                </a>
+            </article>
+
+            <div class="news-stack">
+                @foreach($beritaSamping as $item)
+                    <article class="news-card news-card-side">
                         <a class="news-link" href="{{ route('berita.detail', $item->id) }}">
                             @if($item->foto_kegiatan)
                                 <img class="news-img" src="{{ asset($item->foto_kegiatan) }}" alt="{{ $item->judul }}">
                             @endif
 
-                            <h3>{{ $item->judul }}</h3>
-                            <p class="muted">{{ $item->tanggal_berita }}</p>
-                            <p>{{ \Illuminate\Support\Str::limit($item->isi, 150) }}</p>
-                            <strong>Baca selengkapnya</strong>
+                            <div class="news-body">
+                                <h3>{{ $item->judul }}</h3>
+                                <p class="muted">{{ $item->tanggal_berita }}</p>
+                                <p>{{ \Illuminate\Support\Str::limit($item->isi, 82) }}</p>
+                                <strong>Baca</strong>
+                            </div>
                         </a>
                     </article>
-                @empty
-                    <div class="clean-item news-item">Belum ada berita.</div>
-                @endforelse
+                @endforeach
             </div>
         </div>
 
-        @if($berita->count() > 2)
-            <div class="news-controls">
-                <button class="news-control" type="button" data-news-prev aria-label="Berita sebelumnya">&lsaquo;</button>
-                <button class="news-control" type="button" data-news-next aria-label="Berita berikutnya">&rsaquo;</button>
-            </div>
-        @endif
-    </div>
+        <div class="news-more-wrap">
+            <a class="btn utama" href="{{ route('berita.semua') }}">Baca berita lainnya</a>
+        </div>
+    @else
+        <div class="clean-item news-empty">Belum ada berita.</div>
+    @endif
 </section>
 
 <section class="section section-jenjang" id="jenjang">
@@ -1067,7 +1224,9 @@
         <div class="galeri-masonry" data-galeri-list>
             @foreach($galeri as $item)
                 <figure class="galeri-item" data-galeri-item>
-                    <img src="{{ asset($item->foto) }}" alt="{{ $item->judul ?: 'Foto galeri Yayasan Nurul Huda Munjuk' }}">
+                    <a class="galeri-link" href="{{ asset($item->foto) }}" target="_blank" rel="noopener">
+                        <img src="{{ asset($item->foto) }}" alt="{{ $item->judul ?: 'Foto galeri Yayasan Nurul Huda Munjuk' }}">
+                    </a>
 
                     @if($item->judul)
                         <figcaption class="galeri-caption">{{ $item->judul }}</figcaption>
@@ -1236,18 +1395,8 @@
             dotsWrap.appendChild(dot);
         });
 
-        slider.querySelector('[data-slider-prev]').addEventListener('click', () => {
-            showSlide(index - 1);
-            startAutoSlide();
-        });
-
-        slider.querySelector('[data-slider-next]').addEventListener('click', () => {
-            showSlide(index + 1);
-            startAutoSlide();
-        });
-
         if (slides.length <= 1) {
-            slider.querySelectorAll('.slider-btn, .slider-dots').forEach((control) => control.style.display = 'none');
+            slider.querySelectorAll('.slider-dots').forEach((control) => control.style.display = 'none');
             return;
         }
 
@@ -1380,5 +1529,42 @@
         window.addEventListener('resize', () => updateGallery(true));
         updateGallery(true);
     });
+
+    const revealTargets = document.querySelectorAll([
+        '.section > h2',
+        '.news-card',
+        '.jenjang-card',
+        '.prestasi-card',
+        '.galeri-item',
+        '.cards .clean-item',
+        '.bantuan-item',
+        '.landing-footer'
+    ].join(','));
+
+    if ('IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach((entry) => {
+                if (! entry.isIntersecting) {
+                    return;
+                }
+
+                entry.target.classList.add('revealed');
+                observer.unobserve(entry.target);
+            });
+        }, {
+            threshold: .16,
+            rootMargin: '0px 0px -48px 0px'
+        });
+
+        revealTargets.forEach((target, index) => {
+            target.classList.add('reveal-on-scroll');
+            target.style.setProperty('--reveal-delay', `${Math.min(index % 6, 5) * .06}s`);
+            revealObserver.observe(target);
+        });
+    } else {
+        revealTargets.forEach((target) => {
+            target.classList.add('revealed');
+        });
+    }
 </script>
 @endsection

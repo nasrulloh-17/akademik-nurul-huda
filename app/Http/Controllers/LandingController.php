@@ -17,6 +17,15 @@ class LandingController extends Controller
         ]);
     }
 
+    public function semuaBerita()
+    {
+        return view('landing.berita-semua', [
+            'berita' => DB::table('berita')
+                ->latest('tanggal_berita')
+                ->paginate(9),
+        ]);
+    }
+
     public function berita(int $id)
     {
         $berita = DB::table('berita')->where('id', $id)->first();
