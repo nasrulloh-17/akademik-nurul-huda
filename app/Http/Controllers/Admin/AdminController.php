@@ -39,13 +39,37 @@ class AdminController extends Controller
 
     private function unggah(Request $request, string $nama, string $folder): ?string
     {
-        if (! $request->hasFile($nama)) {
+        $file = $request->file($nama);
+
+        if (! $file) {
             return null;
         }
 
-        $file = $request->file($nama);
+        if (! $file->isValid()) {
+            throw ValidationException::withMessages([
+                $nama => 'Upload foto gagal. Pastikan ukuran file tidak melebihi batas hosting dan format file adalah gambar.',
+            ]);
+        }
+
+        $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? null;
+        $publicRoot = $documentRoot && is_dir($documentRoot)
+            ? rtrim($documentRoot, DIRECTORY_SEPARATOR)
+            : public_path();
+
+        $tujuan = $publicRoot.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.$folder;
+
+        if (! is_dir($tujuan)) {
+            mkdir($tujuan, 0755, true);
+        }
+
+        if (! is_writable($tujuan)) {
+            throw ValidationException::withMessages([
+                $nama => 'Folder upload tidak bisa ditulis. Pastikan folder public_html/uploads memiliki permission yang benar.',
+            ]);
+        }
+
         $namaFile = Str::uuid().'.'.$file->getClientOriginalExtension();
-        $file->move(public_path("uploads/$folder"), $namaFile);
+        $file->move($tujuan, $namaFile);
 
         return "uploads/$folder/$namaFile";
     }

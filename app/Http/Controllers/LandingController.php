@@ -41,4 +41,15 @@ class LandingController extends Controller
                 ->get(),
         ]);
     }
+
+    public function upload(string $path)
+    {
+        abort_if(str_contains($path, '..'), 404);
+
+        $file = public_path('uploads/'.$path);
+
+        abort_if(! is_file($file), 404);
+
+        return response()->file($file);
+    }
 }
