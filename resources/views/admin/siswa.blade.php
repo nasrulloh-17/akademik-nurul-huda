@@ -3,6 +3,29 @@
 @section('judul_halaman', 'Siswa')
 
 @section('konten')
+<style>
+    .siswa-filter-row {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) minmax(180px, 240px) auto auto;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .siswa-filter-row .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 800px) {
+        .siswa-filter-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <form class="card" method="post" action="{{ route('admin.siswa.simpan') }}">
     @csrf
 
@@ -33,6 +56,24 @@
     </p>
 
     <button class="btn">Simpan Siswa</button>
+</form>
+
+<form class="card" method="get" action="{{ route('admin.siswa') }}">
+    <div class="siswa-filter-row">
+        <input name="cari" value="{{ $filterCari }}" placeholder="Cari nama, NIS, NISN, atau telepon">
+
+        <select name="kelas_id">
+            <option value="">Semua Kelas</option>
+            @foreach($kelas as $k)
+                <option value="{{ $k->id }}" @selected((string) $filterKelasId === (string) $k->id)>
+                    {{ $k->nama_kelas }}
+                </option>
+            @endforeach
+        </select>
+
+        <button class="btn" type="submit">Terapkan Filter</button>
+        <a class="btn alt" href="{{ route('admin.siswa') }}">Reset</a>
+    </div>
 </form>
 
 <table>

@@ -315,17 +315,32 @@ class AdminController extends Controller
         return back()->with('sukses', 'Data sekolah berhasil disimpan.');
     }
 
-    public function guru()
+    public function guru(Request $request)
     {
         $this->jaga();
+        $cari = trim((string) $request->query('cari', ''));
+
         return view('admin.guru', [
-            'guru' => DB::table('guru')->join('pengguna', 'pengguna.id', '=', 'guru.pengguna_id')->select('guru.*', 'pengguna.identitas')->latest('guru.id')->get(),
+            'guru' => DB::table('guru')
+                ->join('pengguna', 'pengguna.id', '=', 'guru.pengguna_id')
+                ->select('guru.*', 'pengguna.identitas')
+                ->when($cari !== '', function ($query) use ($cari) {
+                    $query->where(function ($query) use ($cari) {
+                        $query->where('guru.nama_guru', 'like', "%$cari%")
+                            ->orWhere('guru.id_guru', 'like', "%$cari%")
+                            ->orWhere('pengguna.identitas', 'like', "%$cari%")
+                            ->orWhere('guru.telepon', 'like', "%$cari%");
+                    });
+                })
+                ->latest('guru.id')
+                ->get(),
             'roles' => DB::table('guru_role')
                 ->leftJoin('kelas', 'kelas.id', '=', 'guru_role.kelas_id')
                 ->select('guru_role.*', 'kelas.nama_kelas')
                 ->get()
                 ->groupBy('guru_id'),
             'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
+            'filterCari' => $cari,
         ]);
     }
 
@@ -476,12 +491,30 @@ class AdminController extends Controller
         return back()->with('sukses', 'Password guru berhasil diubah.');
     }
 
-    public function siswa()
+    public function siswa(Request $request)
     {
         $this->jaga();
+        $cari = trim((string) $request->query('cari', ''));
+        $kelasId = $request->query('kelas_id');
+
         return view('admin.siswa', [
-            'siswa' => DB::table('siswa')->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')->select('siswa.*', 'kelas.nama_kelas')->latest('siswa.id')->get(),
+            'siswa' => DB::table('siswa')
+                ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+                ->select('siswa.*', 'kelas.nama_kelas')
+                ->when($kelasId, fn ($query) => $query->where('siswa.kelas_id', $kelasId))
+                ->when($cari !== '', function ($query) use ($cari) {
+                    $query->where(function ($query) use ($cari) {
+                        $query->where('siswa.nama_siswa', 'like', "%$cari%")
+                            ->orWhere('siswa.nis', 'like', "%$cari%")
+                            ->orWhere('siswa.nisn', 'like', "%$cari%")
+                            ->orWhere('siswa.telepon', 'like', "%$cari%");
+                    });
+                })
+                ->latest('siswa.id')
+                ->get(),
             'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
+            'filterCari' => $cari,
+            'filterKelasId' => $kelasId,
         ]);
     }
 
@@ -868,7 +901,7 @@ class AdminController extends Controller
 
         return view('admin.backup', [
             'tabel' => DB::select('SHOW TABLES'),
-            'folderUpload' => ['uploads/slider', 'uploads/berita', 'uploads/prestasi', 'uploads/galeri', 'uploads/siswa'],
+            'folderUpload' => ['uploads/slider', 'uploads/berita', 'uploads/prestasi', 'uploads/galeri', 'uploads/siswa', 'uploads/pembayaran'],
         ]);
     }
 

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class GuruController extends Controller
@@ -133,6 +135,74 @@ class GuruController extends Controller
             ->where('role', 'staff')
             ->where('staff_jenis', 'staff keuangan')
             ->exists();
+    }
+
+    private function jagaStafKeuangan()
+    {
+        $guru = $this->guru();
+
+        if (! $this->stafKeuangan($guru->id)) {
+            throw ValidationException::withMessages($this->pesanTidakBerhak());
+        }
+
+        return $guru;
+    }
+
+    private function unggahDokumenKeuangan(Request $request, string $nama, string $folder): ?string
+    {
+        $file = $request->file($nama);
+
+        if (! $file) {
+            return null;
+        }
+
+        if (! $file->isValid()) {
+            throw ValidationException::withMessages([
+                $nama => 'Upload file gagal. Pastikan ukuran file tidak melebihi batas hosting.',
+            ]);
+        }
+
+        $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? null;
+        $publicRoot = $documentRoot && is_dir($documentRoot)
+            ? rtrim($documentRoot, DIRECTORY_SEPARATOR)
+            : public_path();
+        $tujuan = $publicRoot.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.$folder;
+
+        if (! is_dir($tujuan)) {
+            mkdir($tujuan, 0755, true);
+        }
+
+        if (! is_writable($tujuan)) {
+            throw ValidationException::withMessages([
+                $nama => 'Folder upload tidak bisa ditulis. Pastikan folder public_html/uploads memiliki permission yang benar.',
+            ]);
+        }
+
+        $namaFile = Str::uuid().'.'.$file->getClientOriginalExtension();
+        $file->move($tujuan, $namaFile);
+
+        return "uploads/$folder/$namaFile";
+    }
+
+    private function perbaruiStatusTagihan(int $tagihanId): void
+    {
+        $tagihan = DB::table('tagihan')->where('id', $tagihanId)->first();
+
+        if (! $tagihan) {
+            return;
+        }
+
+        $terbayar = (float) DB::table('pembayaran_tagihan')
+            ->where('tagihan_id', $tagihanId)
+            ->where('status', 'valid')
+            ->sum('jumlah_bayar');
+        $jumlah = (float) $tagihan->jumlah;
+        $status = $terbayar <= 0 ? 'belum lunas' : ($terbayar >= $jumlah ? 'lunas' : 'sebagian');
+
+        DB::table('tagihan')->where('id', $tagihanId)->update([
+            'status' => $status,
+            'updated_at' => now(),
+        ]);
     }
 
     private function kelasWali(int $guruId)
@@ -717,20 +787,7 @@ class GuruController extends Controller
             return redirect()->route('guru.dashboard')->withErrors($this->pesanTidakBerhak());
         }
 
-        $siswa = DB::table('siswa')
-            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
-            ->where('siswa.status', 'aktif')
-            ->select('siswa.*', 'kelas.nama_kelas')
-            ->orderBy('kelas.nama_kelas')
-            ->orderBy('siswa.nama_siswa')
-            ->get();
-
-        $tagihan = DB::table('tagihan')
-            ->whereIn('nama_tagihan', ['SPP dan Makan', 'Kelengkapan Sekolah', 'Lainnya'])
-            ->get()
-            ->keyBy(fn ($item) => $item->siswa_id.'|'.$item->nama_tagihan);
-
-        return view('guru.administrasi', compact('siswa', 'tagihan'));
+        return redirect()->route('guru.keuangan.tagihan');
     }
 
     public function simpanAdministrasi(Request $request)
@@ -776,6 +833,284 @@ class GuruController extends Controller
         }
 
         return back()->with('sukses', 'Tagihan siswa berhasil disimpan.');
+    }
+
+    public function jenisTagihan()
+    {
+        $this->jagaStafKeuangan();
+
+        return view('admin.keuangan-jenis-tagihan', [
+            'jenisTagihan' => DB::table('jenis_tagihan')->orderByDesc('aktif')->orderBy('nama_tagihan')->get(),
+        ]);
+    }
+
+    public function simpanJenisTagihan(Request $request)
+    {
+        $this->jagaStafKeuangan();
+        $data = $request->validate([
+            'nama_tagihan' => 'required|string|max:255|unique:jenis_tagihan,nama_tagihan',
+            'keterangan' => 'nullable|string',
+            'aktif' => 'nullable',
+        ]);
+
+        DB::table('jenis_tagihan')->insert([
+            'nama_tagihan' => $data['nama_tagihan'],
+            'keterangan' => $data['keterangan'] ?? null,
+            'aktif' => $request->boolean('aktif', true),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('sukses', 'Jenis tagihan berhasil ditambahkan.');
+    }
+
+    public function ubahJenisTagihan(Request $request, int $id)
+    {
+        $this->jagaStafKeuangan();
+        $data = $request->validate([
+            'nama_tagihan' => ['required', 'string', 'max:255', Rule::unique('jenis_tagihan', 'nama_tagihan')->ignore($id)],
+            'keterangan' => 'nullable|string',
+            'aktif' => 'nullable',
+        ]);
+
+        DB::table('jenis_tagihan')->where('id', $id)->update([
+            'nama_tagihan' => $data['nama_tagihan'],
+            'keterangan' => $data['keterangan'] ?? null,
+            'aktif' => $request->boolean('aktif'),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('sukses', 'Jenis tagihan berhasil diubah.');
+    }
+
+    public function tagihanKeuangan(Request $request)
+    {
+        $this->jagaStafKeuangan();
+        $cari = trim((string) $request->query('cari', ''));
+        $kelasId = $request->query('kelas_id');
+
+        $tagihan = DB::table('tagihan')
+            ->join('siswa', 'siswa.id', '=', 'tagihan.siswa_id')
+            ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+            ->leftJoin('jenis_tagihan', 'jenis_tagihan.id', '=', 'tagihan.jenis_tagihan_id')
+            ->select(
+                'tagihan.*',
+                'siswa.nis',
+                'siswa.nisn',
+                'siswa.nama_siswa',
+                'kelas.nama_kelas',
+                'jenis_tagihan.nama_tagihan as nama_jenis_tagihan',
+                DB::raw("(select coalesce(sum(jumlah_bayar), 0) from pembayaran_tagihan where pembayaran_tagihan.tagihan_id = tagihan.id and pembayaran_tagihan.status = 'valid') as total_bayar")
+            )
+            ->when($kelasId, fn ($query) => $query->where('siswa.kelas_id', $kelasId))
+            ->when($cari !== '', function ($query) use ($cari) {
+                $query->where(function ($query) use ($cari) {
+                    $query->where('siswa.nama_siswa', 'like', "%$cari%")
+                        ->orWhere('siswa.nis', 'like', "%$cari%")
+                        ->orWhere('siswa.nisn', 'like', "%$cari%")
+                        ->orWhere('tagihan.nama_tagihan', 'like', "%$cari%");
+                });
+            })
+            ->latest('tagihan.id')
+            ->get();
+
+        return view('admin.keuangan-tagihan', [
+            'tagihan' => $tagihan,
+            'jenisTagihan' => DB::table('jenis_tagihan')->where('aktif', true)->orderBy('nama_tagihan')->get(),
+            'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
+            'siswa' => DB::table('siswa')
+                ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+                ->select('siswa.*', 'kelas.nama_kelas')
+                ->where('siswa.status', 'aktif')
+                ->orderBy('siswa.nama_siswa')
+                ->get(),
+            'filterCari' => $cari,
+            'filterKelasId' => $kelasId,
+        ]);
+    }
+
+    public function simpanTagihanKeuangan(Request $request)
+    {
+        $this->jagaStafKeuangan();
+        $data = $request->validate([
+            'jenis_tagihan_id' => 'required|exists:jenis_tagihan,id',
+            'siswa_id' => 'nullable|exists:siswa,id',
+            'kelas_id' => 'nullable|exists:kelas,id',
+            'periode' => 'nullable|string|max:100',
+            'jumlah' => 'required|numeric|min:0',
+            'jatuh_tempo' => 'nullable|date',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        if (empty($data['siswa_id']) && empty($data['kelas_id'])) {
+            return back()->withInput()->withErrors(['siswa_id' => 'Pilih siswa atau kelas tujuan tagihan.']);
+        }
+
+        $jenis = DB::table('jenis_tagihan')->where('id', $data['jenis_tagihan_id'])->first();
+        $tahunAjaran = $this->tahunAjaranAktif();
+        $siswaIds = ! empty($data['siswa_id'])
+            ? collect([(int) $data['siswa_id']])
+            : DB::table('siswa')
+                ->where('kelas_id', $data['kelas_id'])
+                ->where('status', 'aktif')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id);
+
+        foreach ($siswaIds as $siswaId) {
+            DB::table('tagihan')->updateOrInsert(
+                [
+                    'siswa_id' => $siswaId,
+                    'jenis_tagihan_id' => $jenis->id,
+                    'tahun_ajaran_id' => $tahunAjaran->id,
+                    'periode' => $data['periode'] ?? null,
+                ],
+                [
+                    'nama_tagihan' => $jenis->nama_tagihan,
+                    'jumlah' => $data['jumlah'],
+                    'jatuh_tempo' => $data['jatuh_tempo'] ?? null,
+                    'keterangan' => $data['keterangan'] ?? null,
+                    'status' => 'belum lunas',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
+
+        return back()->with('sukses', 'Tagihan berhasil dibuat atau diperbarui.');
+    }
+
+    public function pembayaranKeuangan(Request $request)
+    {
+        $this->jagaStafKeuangan();
+        $siswaId = $request->integer('siswa_id');
+
+        return view('admin.keuangan-pembayaran', [
+            'siswa' => DB::table('siswa')->where('status', 'aktif')->orderBy('nama_siswa')->get(),
+            'siswaTerpilih' => $siswaId,
+            'tagihan' => $siswaId
+                ? DB::table('tagihan')
+                    ->where('siswa_id', $siswaId)
+                    ->where('status', '!=', 'lunas')
+                    ->latest()
+                    ->get()
+                    ->map(function ($tagihan) {
+                        $tagihan->total_bayar = DB::table('pembayaran_tagihan')
+                            ->where('tagihan_id', $tagihan->id)
+                            ->where('status', 'valid')
+                            ->sum('jumlah_bayar');
+
+                        return $tagihan;
+                    })
+                : collect(),
+        ]);
+    }
+
+    public function simpanPembayaranKeuangan(Request $request)
+    {
+        $this->jagaStafKeuangan();
+        $data = $request->validate([
+            'tagihan_id' => 'required|exists:tagihan,id',
+            'tanggal_bayar' => 'required|date',
+            'jumlah_bayar' => 'required|numeric|min:1',
+            'metode_bayar' => 'required|in:tunai,transfer,QRIS,lainnya',
+            'keterangan' => 'nullable|string',
+            'bukti_pembayaran' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:4096',
+        ]);
+        $tagihan = DB::table('tagihan')->where('id', $data['tagihan_id'])->first();
+        $bukti = $request->hasFile('bukti_pembayaran')
+            ? $this->unggahDokumenKeuangan($request, 'bukti_pembayaran', 'pembayaran')
+            : null;
+
+        DB::table('pembayaran_tagihan')->insert([
+            'tagihan_id' => $tagihan->id,
+            'siswa_id' => $tagihan->siswa_id,
+            'petugas_id' => session('pengguna_id'),
+            'tanggal_bayar' => $data['tanggal_bayar'],
+            'jumlah_bayar' => $data['jumlah_bayar'],
+            'metode_bayar' => $data['metode_bayar'],
+            'bukti_pembayaran' => $bukti,
+            'keterangan' => $data['keterangan'] ?? null,
+            'status' => 'valid',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->perbaruiStatusTagihan($tagihan->id);
+
+        return back()->with('sukses', 'Pembayaran berhasil dicatat.');
+    }
+
+    public function riwayatPembayaranKeuangan(Request $request)
+    {
+        $this->jagaStafKeuangan();
+        $cari = trim((string) $request->query('cari', ''));
+
+        return view('admin.keuangan-riwayat', [
+            'pembayaran' => DB::table('pembayaran_tagihan')
+                ->join('siswa', 'siswa.id', '=', 'pembayaran_tagihan.siswa_id')
+                ->join('tagihan', 'tagihan.id', '=', 'pembayaran_tagihan.tagihan_id')
+                ->leftJoin('pengguna', 'pengguna.id', '=', 'pembayaran_tagihan.petugas_id')
+                ->select('pembayaran_tagihan.*', 'siswa.nama_siswa', 'siswa.nis', 'tagihan.nama_tagihan', 'tagihan.periode', 'pengguna.nama as nama_petugas')
+                ->when($cari !== '', function ($query) use ($cari) {
+                    $query->where(function ($query) use ($cari) {
+                        $query->where('siswa.nama_siswa', 'like', "%$cari%")
+                            ->orWhere('siswa.nis', 'like', "%$cari%")
+                            ->orWhere('tagihan.nama_tagihan', 'like', "%$cari%");
+                    });
+                })
+                ->latest('pembayaran_tagihan.tanggal_bayar')
+                ->latest('pembayaran_tagihan.id')
+                ->get(),
+            'filterCari' => $cari,
+        ]);
+    }
+
+    public function batalkanPembayaranKeuangan(Request $request, int $id)
+    {
+        $this->jagaStafKeuangan();
+        $data = $request->validate(['alasan_pembatalan' => 'required|string|max:255']);
+        $pembayaran = DB::table('pembayaran_tagihan')->where('id', $id)->first();
+
+        abort_unless($pembayaran, 404);
+
+        DB::table('pembayaran_tagihan')->where('id', $id)->update([
+            'status' => 'dibatalkan',
+            'alasan_pembatalan' => $data['alasan_pembatalan'],
+            'updated_at' => now(),
+        ]);
+
+        $this->perbaruiStatusTagihan($pembayaran->tagihan_id);
+
+        return back()->with('sukses', 'Pembayaran berhasil dibatalkan.');
+    }
+
+    public function rekapKeuangan()
+    {
+        $this->jagaStafKeuangan();
+        $totalTagihan = DB::table('tagihan')
+            ->select('siswa_id', DB::raw('sum(jumlah) as total_tagihan'))
+            ->groupBy('siswa_id');
+        $totalBayar = DB::table('pembayaran_tagihan')
+            ->where('status', 'valid')
+            ->select('siswa_id', DB::raw('sum(jumlah_bayar) as total_bayar'))
+            ->groupBy('siswa_id');
+
+        return view('admin.keuangan-rekap', [
+            'rekap' => DB::table('siswa')
+                ->leftJoin('kelas', 'kelas.id', '=', 'siswa.kelas_id')
+                ->leftJoinSub($totalTagihan, 'total_tagihan', 'total_tagihan.siswa_id', '=', 'siswa.id')
+                ->leftJoinSub($totalBayar, 'total_bayar', 'total_bayar.siswa_id', '=', 'siswa.id')
+                ->select(
+                    'siswa.id',
+                    'siswa.nis',
+                    'siswa.nama_siswa',
+                    'kelas.nama_kelas',
+                    DB::raw('coalesce(total_tagihan.total_tagihan, 0) as total_tagihan'),
+                    DB::raw('coalesce(total_bayar.total_bayar, 0) as total_bayar')
+                )
+                ->orderBy('siswa.nama_siswa')
+                ->get(),
+        ]);
     }
 
     public function kegiatanTambahan(Request $request)

@@ -29,9 +29,12 @@
     <h3>Rincian Tagihan</h3>
 
     @php
-        $sppMakan = $tagihanAdministrasi['SPP dan Makan']->jumlah ?? 0;
-        $kelengkapan = $tagihanAdministrasi['Kelengkapan Sekolah']->jumlah ?? 0;
-        $lainnya = $tagihanAdministrasi['Lainnya']->jumlah ?? 0;
+        $sppMakanItem = $tagihanAdministrasi['SPP dan Makan'] ?? null;
+        $kelengkapanItem = $tagihanAdministrasi['Kelengkapan Sekolah'] ?? null;
+        $lainnyaItem = $tagihanAdministrasi['Lainnya'] ?? null;
+        $sppMakan = max(0, (float) ($sppMakanItem->jumlah ?? 0) - (float) ($sppMakanItem->total_bayar ?? 0));
+        $kelengkapan = max(0, (float) ($kelengkapanItem->jumlah ?? 0) - (float) ($kelengkapanItem->total_bayar ?? 0));
+        $lainnya = max(0, (float) ($lainnyaItem->jumlah ?? 0) - (float) ($lainnyaItem->total_bayar ?? 0));
         $totalAdministrasi = $sppMakan + $kelengkapan + $lainnya;
     @endphp
 
@@ -40,7 +43,7 @@
             <th>SPP dan Makan</th>
             <th>Kelengkapan Sekolah</th>
             <th>Lainnya</th>
-            <th>Total</th>
+            <th>Total Sisa</th>
         </tr>
         <tr>
             <td>Rp {{ number_format($sppMakan, 0, ',', '.') }}</td>

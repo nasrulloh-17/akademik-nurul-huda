@@ -221,6 +221,66 @@
             transform: translateX(4px);
         }
 
+        .menu-group {
+            margin: 7px 0;
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .07);
+            overflow: hidden;
+        }
+
+        .menu-group summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 11px 12px;
+            color: #eafffb;
+            font-weight: 400;
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+            transition: background .2s ease, color .2s ease;
+        }
+
+        .menu-group summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .menu-group summary::after {
+            content: "+";
+            display: inline-grid;
+            place-items: center;
+            flex: 0 0 22px;
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .14);
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .menu-group[open] summary {
+            background: rgba(255, 255, 255, .14);
+            color: white;
+        }
+
+        .menu-group[open] summary::after {
+            content: "-";
+        }
+
+        .submenu {
+            padding: 5px 8px 8px;
+        }
+
+        .submenu a {
+            margin: 3px 0;
+            padding: 9px 10px 9px 18px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 400;
+        }
+
         .menu-collapsed .side {
             width: 86px;
         }

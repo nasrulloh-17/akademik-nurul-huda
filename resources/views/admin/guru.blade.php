@@ -99,6 +99,14 @@
     <button class="btn">Simpan Guru</button>
 </form>
 
+<form class="card" method="get" action="{{ route('admin.guru') }}">
+    <div class="form-grid">
+        <input name="cari" value="{{ $filterCari }}" placeholder="Cari nama guru, ID guru, atau telepon">
+        <button class="btn" type="submit">Cari Guru</button>
+        <a class="btn alt" href="{{ route('admin.guru') }}">Reset</a>
+    </div>
+</form>
+
 <table>
     <tr>
         <th>ID Guru</th>

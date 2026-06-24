@@ -55,15 +55,21 @@ class SiswaController extends Controller
     {
         $siswa = $this->siswa();
         $tagihan = DB::table('tagihan')
+            ->select('tagihan.*', DB::raw("(select coalesce(sum(jumlah_bayar), 0) from pembayaran_tagihan where pembayaran_tagihan.tagihan_id = tagihan.id and pembayaran_tagihan.status = 'valid') as total_bayar"))
             ->where('siswa_id', $siswa->id)
             ->whereIn('nama_tagihan', ['SPP dan Makan', 'Kelengkapan Sekolah', 'Lainnya'])
             ->get()
             ->keyBy('nama_tagihan');
+        $totalTagihan = DB::table('tagihan')->where('siswa_id', $siswa->id)->sum('jumlah');
+        $totalBayar = DB::table('pembayaran_tagihan')
+            ->where('siswa_id', $siswa->id)
+            ->where('status', 'valid')
+            ->sum('jumlah_bayar');
 
         return view('siswa.dashboard', [
             'siswa' => $siswa,
             'totalNilai' => DB::table('nilai')->where('siswa_id', $siswa->id)->count(),
-            'totalTagihan' => DB::table('tagihan')->where('siswa_id', $siswa->id)->where('status', 'belum lunas')->sum('jumlah'),
+            'totalTagihan' => max(0, $totalTagihan - $totalBayar),
             'tagihanAdministrasi' => $tagihan,
             'catatanWaliKelas' => DB::table('catatan_walikelas')
                 ->where('siswa_id', $siswa->id)
@@ -259,6 +265,12 @@ class SiswaController extends Controller
     public function tagihan()
     {
         $siswa = $this->siswa();
-        return view('siswa.tagihan', ['tagihan' => DB::table('tagihan')->where('siswa_id', $siswa->id)->latest()->get()]);
+        return view('siswa.tagihan', [
+            'tagihan' => DB::table('tagihan')
+                ->select('tagihan.*', DB::raw("(select coalesce(sum(jumlah_bayar), 0) from pembayaran_tagihan where pembayaran_tagihan.tagihan_id = tagihan.id and pembayaran_tagihan.status = 'valid') as total_bayar"))
+                ->where('siswa_id', $siswa->id)
+                ->latest()
+                ->get(),
+        ]);
     }
 }

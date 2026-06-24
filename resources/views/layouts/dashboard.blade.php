@@ -36,26 +36,53 @@
         <nav class="menu" data-dashboard-menu>
             @if($jenisPengguna === 'admin')
                 <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
-                <a class="{{ request()->routeIs('admin.slider') ? 'active' : '' }}" href="{{ route('admin.slider') }}">Slider</a>
-                <a class="{{ request()->routeIs('admin.berita') ? 'active' : '' }}" href="{{ route('admin.berita') }}">Berita</a>
-                <a class="{{ request()->routeIs('admin.prestasi') ? 'active' : '' }}" href="{{ route('admin.prestasi') }}">Prestasi</a>
-                <a class="{{ request()->routeIs('admin.galeri') ? 'active' : '' }}" href="{{ route('admin.galeri') }}">Galeri</a>
-                <a class="{{ request()->routeIs('admin.informasi') ? 'active' : '' }}" href="{{ route('admin.informasi') }}">Informasi Sekolah</a>
-                <a class="{{ request()->routeIs('admin.data-sekolah') ? 'active' : '' }}" href="{{ route('admin.data-sekolah') }}">Data Sekolah</a>
-                <a class="{{ request()->routeIs('admin.guru') ? 'active' : '' }}" href="{{ route('admin.guru') }}">Guru</a>
-                <a class="{{ request()->routeIs('admin.siswa') ? 'active' : '' }}" href="{{ route('admin.siswa') }}">Siswa</a>
-                <a class="{{ request()->routeIs('admin.kelas') ? 'active' : '' }}" href="{{ route('admin.kelas') }}">Kelas</a>
-                <a class="{{ request()->routeIs('admin.naik-kelas') ? 'active' : '' }}" href="{{ route('admin.naik-kelas') }}">Naik Kelas</a>
-                <a class="{{ request()->routeIs('admin.mata-pelajaran') ? 'active' : '' }}" href="{{ route('admin.mata-pelajaran') }}">Mata Pelajaran</a>
-                <a class="{{ request()->routeIs('admin.admin-user') ? 'active' : '' }}" href="{{ route('admin.admin-user') }}">Admin</a>
-                <a class="{{ request()->routeIs('admin.backup') ? 'active' : '' }}" href="{{ route('admin.backup') }}">Backup</a>
+
+                <details class="menu-group" {{ request()->routeIs('admin.slider', 'admin.berita', 'admin.prestasi', 'admin.galeri', 'admin.informasi') ? 'open' : '' }}>
+                    <summary>Kelola Halaman Utama</summary>
+                    <div class="submenu">
+                        <a class="{{ request()->routeIs('admin.slider') ? 'active' : '' }}" href="{{ route('admin.slider') }}">Slider</a>
+                        <a class="{{ request()->routeIs('admin.berita') ? 'active' : '' }}" href="{{ route('admin.berita') }}">Berita</a>
+                        <a class="{{ request()->routeIs('admin.prestasi') ? 'active' : '' }}" href="{{ route('admin.prestasi') }}">Prestasi</a>
+                        <a class="{{ request()->routeIs('admin.galeri') ? 'active' : '' }}" href="{{ route('admin.galeri') }}">Galeri</a>
+                        <a class="{{ request()->routeIs('admin.informasi') ? 'active' : '' }}" href="{{ route('admin.informasi') }}">Informasi Sekolah</a>
+                    </div>
+                </details>
+
+                <details class="menu-group" {{ request()->routeIs('admin.data-sekolah', 'admin.guru', 'admin.siswa', 'admin.kelas', 'admin.naik-kelas', 'admin.mata-pelajaran') ? 'open' : '' }}>
+                    <summary>Halaman Akademik</summary>
+                    <div class="submenu">
+                        <a class="{{ request()->routeIs('admin.data-sekolah') ? 'active' : '' }}" href="{{ route('admin.data-sekolah') }}">Data Sekolah</a>
+                        <a class="{{ request()->routeIs('admin.guru') ? 'active' : '' }}" href="{{ route('admin.guru') }}">Guru</a>
+                        <a class="{{ request()->routeIs('admin.siswa') ? 'active' : '' }}" href="{{ route('admin.siswa') }}">Siswa</a>
+                        <a class="{{ request()->routeIs('admin.kelas') ? 'active' : '' }}" href="{{ route('admin.kelas') }}">Kelas</a>
+                        <a class="{{ request()->routeIs('admin.naik-kelas') ? 'active' : '' }}" href="{{ route('admin.naik-kelas') }}">Naik Kelas</a>
+                        <a class="{{ request()->routeIs('admin.mata-pelajaran') ? 'active' : '' }}" href="{{ route('admin.mata-pelajaran') }}">Mata Pelajaran</a>
+                    </div>
+                </details>
+
+                <details class="menu-group" {{ request()->routeIs('admin.admin-user', 'admin.backup') ? 'open' : '' }}>
+                    <summary>Pengaturan Sistem</summary>
+                    <div class="submenu">
+                        <a class="{{ request()->routeIs('admin.admin-user') ? 'active' : '' }}" href="{{ route('admin.admin-user') }}">Admin</a>
+                        <a class="{{ request()->routeIs('admin.backup') ? 'active' : '' }}" href="{{ route('admin.backup') }}">Backup</a>
+                    </div>
+                </details>
             @elseif($jenisPengguna === 'guru')
                 <a class="{{ request()->routeIs('guru.dashboard') ? 'active' : '' }}" href="{{ route('guru.dashboard') }}">Dashboard</a>
                 <a class="{{ request()->routeIs('guru.biodata') ? 'active' : '' }}" href="{{ route('guru.biodata') }}">Biodata</a>
                 <a class="{{ request()->routeIs('guru.nilai') ? 'active' : '' }}" href="{{ route('guru.nilai') }}">Input Nilai</a>
                 <a class="{{ request()->routeIs('guru.kegiatan-tambahan') ? 'active' : '' }}" href="{{ route('guru.kegiatan-tambahan') }}">Kegiatan Tambahan</a>
                 @if($guruStafKeuangan)
-                    <a class="{{ request()->routeIs('guru.administrasi') ? 'active' : '' }}" href="{{ route('guru.administrasi') }}">Administrasi</a>
+                    <details class="menu-group" {{ request()->routeIs('guru.keuangan.*', 'guru.administrasi') ? 'open' : '' }}>
+                        <summary>Administrasi Keuangan</summary>
+                        <div class="submenu">
+                            <a class="{{ request()->routeIs('guru.keuangan.jenis-tagihan') ? 'active' : '' }}" href="{{ route('guru.keuangan.jenis-tagihan') }}">Jenis Tagihan</a>
+                            <a class="{{ request()->routeIs('guru.keuangan.tagihan') ? 'active' : '' }}" href="{{ route('guru.keuangan.tagihan') }}">Tagihan Siswa</a>
+                            <a class="{{ request()->routeIs('guru.keuangan.pembayaran') ? 'active' : '' }}" href="{{ route('guru.keuangan.pembayaran') }}">Input Pembayaran</a>
+                            <a class="{{ request()->routeIs('guru.keuangan.riwayat') ? 'active' : '' }}" href="{{ route('guru.keuangan.riwayat') }}">Riwayat Pembayaran</a>
+                            <a class="{{ request()->routeIs('guru.keuangan.rekap') ? 'active' : '' }}" href="{{ route('guru.keuangan.rekap') }}">Rekap Keuangan</a>
+                        </div>
+                    </details>
                 @endif
                 <a class="{{ request()->routeIs('guru.catatan') ? 'active' : '' }}" href="{{ route('guru.catatan') }}">Catatan Walikelas</a>
                 <a class="{{ request()->routeIs('guru.rekap-raport') ? 'active' : '' }}" href="{{ route('guru.rekap-raport') }}">Rekap Raport</a>

@@ -83,6 +83,16 @@ Route::prefix('guru')->name('guru.')->group(function () {
     Route::post('/kegiatan-tambahan', [GuruController::class, 'simpanKegiatanTambahan'])->name('kegiatan-tambahan.simpan');
     Route::get('/administrasi', [GuruController::class, 'administrasi'])->name('administrasi');
     Route::post('/administrasi', [GuruController::class, 'simpanAdministrasi'])->name('administrasi.simpan');
+    Route::get('/keuangan/jenis-tagihan', [GuruController::class, 'jenisTagihan'])->name('keuangan.jenis-tagihan');
+    Route::post('/keuangan/jenis-tagihan', [GuruController::class, 'simpanJenisTagihan'])->name('keuangan.jenis-tagihan.simpan');
+    Route::post('/keuangan/jenis-tagihan/{id}/ubah', [GuruController::class, 'ubahJenisTagihan'])->name('keuangan.jenis-tagihan.ubah');
+    Route::get('/keuangan/tagihan', [GuruController::class, 'tagihanKeuangan'])->name('keuangan.tagihan');
+    Route::post('/keuangan/tagihan', [GuruController::class, 'simpanTagihanKeuangan'])->name('keuangan.tagihan.simpan');
+    Route::get('/keuangan/pembayaran', [GuruController::class, 'pembayaranKeuangan'])->name('keuangan.pembayaran');
+    Route::post('/keuangan/pembayaran', [GuruController::class, 'simpanPembayaranKeuangan'])->name('keuangan.pembayaran.simpan');
+    Route::get('/keuangan/riwayat', [GuruController::class, 'riwayatPembayaranKeuangan'])->name('keuangan.riwayat');
+    Route::post('/keuangan/riwayat/{id}/batal', [GuruController::class, 'batalkanPembayaranKeuangan'])->name('keuangan.riwayat.batal');
+    Route::get('/keuangan/rekap', [GuruController::class, 'rekapKeuangan'])->name('keuangan.rekap');
     Route::get('/download-csv', [GuruController::class, 'downloadCsv'])->name('download-csv');
     Route::get('/download-csv/{jenis}', [GuruController::class, 'unduhCsv'])->name('download-csv.unduh');
     Route::get('/rekap-raport', [GuruController::class, 'rekapRaport'])->name('rekap-raport');
