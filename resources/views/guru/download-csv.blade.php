@@ -20,7 +20,7 @@
 <div class="card">
     <h3>Data Nilai Akhir Siswa</h3>
     <p class="muted">
-        Data nilai akhir diambil dari tahun ajaran aktif:
+        Secara default data nilai akhir diambil dari tahun ajaran aktif:
         {{ $tahunAjaran->nama_tahun_ajaran }} - {{ ucfirst($tahunAjaran->semester ?? 'ganjil') }}.
     </p>
 
@@ -30,6 +30,14 @@
                 <option value="">Pilih kelas</option>
                 @foreach($kelas as $item)
                     <option value="{{ $item->id }}">{{ $item->nama_kelas }}</option>
+                @endforeach
+            </select>
+
+            <select name="tahun_ajaran_id">
+                @foreach($daftarTahunAjaran as $periode)
+                    <option value="{{ $periode->id }}" @selected((int) $tahunAjaran->id === (int) $periode->id)>
+                        {{ $periode->nama_tahun_ajaran }} - {{ ucfirst($periode->semester ?? 'ganjil') }}
+                    </option>
                 @endforeach
             </select>
 
@@ -50,6 +58,14 @@
                 <option value="">Pilih kelas</option>
                 @foreach($kelas as $item)
                     <option value="{{ $item->id }}">{{ $item->nama_kelas }}</option>
+                @endforeach
+            </select>
+
+            <select name="tahun_ajaran_id">
+                @foreach($daftarTahunAjaran as $periode)
+                    <option value="{{ $periode->id }}" @selected((int) $tahunAjaran->id === (int) $periode->id)>
+                        {{ $periode->nama_tahun_ajaran }} - {{ ucfirst($periode->semester ?? 'ganjil') }}
+                    </option>
                 @endforeach
             </select>
 

@@ -358,6 +358,7 @@ class GuruController extends Controller
         return view('guru.download-csv', [
             'kelas' => DB::table('kelas')->orderBy('nama_kelas')->get(),
             'tahunAjaran' => $this->tahunAjaranAktif(),
+            'daftarTahunAjaran' => $this->daftarTahunAjaran(),
         ]);
     }
 
@@ -448,7 +449,7 @@ class GuruController extends Controller
 
     private function unduhCsvNilaiAkhir(Request $request)
     {
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranTerpilih($request);
         $kelasId = $request->integer('kelas_id');
         $kelas = DB::table('kelas')->where('id', $kelasId)->first();
 
@@ -459,25 +460,56 @@ class GuruController extends Controller
             ->where('status', 'aktif')
             ->orderBy('nama_siswa')
             ->get();
-        $mapel = DB::table('mata_pelajaran')
-            ->where(fn ($query) => $query->where('kelas_id', $kelasId)->orWhereNull('kelas_id'))
-            ->orderBy('nama_mata_pelajaran')
-            ->get();
         $nilai = DB::table('nilai')
             ->where('tahun_ajaran_id', $tahunAjaran->id)
             ->whereIn('siswa_id', $siswa->pluck('id'))
             ->get()
-            ->keyBy(fn ($item) => $item->siswa_id.'|'.$item->mata_pelajaran_id);
+            ->groupBy('siswa_id');
+        $mapelIdsBernilai = $nilai
+            ->flatten(1)
+            ->pluck('mata_pelajaran_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $mapel = DB::table('mata_pelajaran')
+            ->where(function ($query) use ($kelasId, $mapelIdsBernilai) {
+                $query->where('kelas_id', $kelasId)
+                    ->orWhereNull('kelas_id');
+
+                if ($mapelIdsBernilai->isNotEmpty()) {
+                    $query->orWhereIn('id', $mapelIdsBernilai);
+                }
+            })
+            ->orderBy('nama_mata_pelajaran')
+            ->get();
+        $kelompokMapel = $mapel
+            ->groupBy(fn ($item) => strtolower(trim($item->nama_mata_pelajaran)).'|'.strtolower(trim($item->jenis_pelajaran ?? 'Formal')))
+            ->map(function ($items) {
+                $utama = $items->sortBy(fn ($item) => $item->kelas_id === null ? 1 : 0)->first();
+
+                return [
+                    'id' => $utama->id,
+                    'nama' => $utama->nama_mata_pelajaran,
+                    'jenis' => $utama->jenis_pelajaran ?? 'Formal',
+                    'ids' => $items->pluck('id')->map(fn ($id) => (int) $id)->values(),
+                ];
+            })
+            ->values();
         $rekap = [];
 
         foreach ($siswa as $murid) {
             $total = 0;
             $jumlahMapelDinilai = 0;
             $nilaiMapel = [];
+            $nilaiSiswa = $nilai[$murid->id] ?? collect();
 
-            foreach ($mapel as $pelajaran) {
-                $nilaiAkhir = $this->angkaNilaiAkhir($nilai[$murid->id.'|'.$pelajaran->id] ?? null);
-                $nilaiMapel[$pelajaran->id] = $nilaiAkhir;
+            foreach ($kelompokMapel as $pelajaran) {
+                $nilaiTerpilih = $nilaiSiswa
+                    ->whereIn('mata_pelajaran_id', $pelajaran['ids'])
+                    ->sortByDesc('updated_at')
+                    ->first();
+                $nilaiAkhir = $this->angkaNilaiAkhir($nilaiTerpilih);
+                $nilaiMapel[$pelajaran['id']] = $nilaiAkhir;
 
                 if ($nilaiAkhir !== null) {
                     $total += $nilaiAkhir;
@@ -501,14 +533,18 @@ class GuruController extends Controller
             ->values()
             ->flip()
             ->map(fn ($index) => $index + 1);
-        $header = array_merge(['No', 'Nama Siswa', 'Kelas'], $mapel->pluck('nama_mata_pelajaran')->toArray(), ['Jumlah Total Nilai', 'Rata-rata', 'Peringkat']);
+        $adaNamaMapelGanda = $kelompokMapel->pluck('nama')->duplicates()->isNotEmpty();
+        $headerMapel = $kelompokMapel
+            ->map(fn ($pelajaran) => $adaNamaMapelGanda ? $pelajaran['nama'].' ('.$pelajaran['jenis'].')' : $pelajaran['nama'])
+            ->toArray();
+        $header = array_merge(['No', 'Nama Siswa', 'Kelas'], $headerMapel, ['Jumlah Total Nilai', 'Rata-rata', 'Peringkat']);
         $baris = [];
 
         foreach ($siswa as $index => $murid) {
             $row = [$index + 1, $murid->nama_siswa, $kelas->nama_kelas];
 
-            foreach ($mapel as $pelajaran) {
-                $row[] = $rekap[$murid->id]['nilai_mapel'][$pelajaran->id] ?? '';
+            foreach ($kelompokMapel as $pelajaran) {
+                $row[] = $rekap[$murid->id]['nilai_mapel'][$pelajaran['id']] ?? '';
             }
 
             $row[] = $rekap[$murid->id]['total'];
@@ -522,7 +558,7 @@ class GuruController extends Controller
 
     private function unduhCsvKetidakhadiran(Request $request)
     {
-        $tahunAjaran = $this->tahunAjaranAktif();
+        $tahunAjaran = $this->tahunAjaranTerpilih($request);
         $kelasId = $request->integer('kelas_id');
         $kelas = DB::table('kelas')->where('id', $kelasId)->first();
 
